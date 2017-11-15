@@ -1,35 +1,4 @@
-var vertexShaderText = 
-[
-'precision mediump float;',
-'',
-'attribute vec3 vertPosition;',
-'attribute vec3 vertColor;',
-'varying vec3 fragColor;',
-'uniform mat4 mWorld;',
-'uniform mat4 mView;',
-'uniform mat4 mProj;',
-'',
-'void main()',
-'{',
-'  fragColor = vertColor;',
-'  gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);',
-'}'
-].join('\n');
-
-var fragmentShaderText =
-[
-'precision mediump float;',
-'',
-'varying vec3 fragColor;',
-'void main()',
-'{',
-'  gl_FragColor = vec4(fragColor, 1.0);',
-'}'
-].join('\n');
-
 var gl;
-
-
 
 var drawCube=function(scaleV){
 	//what dis do:
@@ -59,12 +28,9 @@ var drawCube=function(scaleV){
 		//
 		// Create shaders
 		// 
-		var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-		var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-	
-		gl.shaderSource(vertexShader, vertexShaderText);
-		gl.shaderSource(fragmentShader, fragmentShaderText);
-	
+		var fragmentShader = getShader(gl, "shader-fs");
+  		var vertexShader = getShader(gl, "shader-vs");
+
 		gl.compileShader(vertexShader);
 		if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
 			console.error('ERROR compiling vertex shader!', gl.getShaderInfoLog(vertexShader));
@@ -236,7 +202,7 @@ var drawCube=function(scaleV){
 		//fps
 		var loop = function () {
 
-			console.log(scaleMatrix);
+			//console.log(scaleMatrix);
 
 			//angle = performance.now() / 1000 / 6 * 2 * Math.PI;
 			//mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
@@ -271,4 +237,57 @@ var getScaleMatrix = function(v){
 		0.0,  0.0,  0.0,  1.0  
 	 ]);
 	 return out;
+}
+
+//
+// getShader
+//
+// Loads a shader program by scouring the current document,
+// looking for a script with the specified ID.
+//
+// op.: skopirano iz primerov z vaj
+//
+function getShader(gl, id) {
+  var shaderScript = document.getElementById(id);
+
+  // Didn't find an element with the specified ID; abort.
+  if (!shaderScript) {
+    return null;
+  }
+
+  // Walk through the source element's children, building the
+  // shader source string.
+  var shaderSource = "";
+  var currentChild = shaderScript.firstChild;
+  while (currentChild) {
+    if (currentChild.nodeType == 3) {
+        shaderSource += currentChild.textContent;
+    }
+    currentChild = currentChild.nextSibling;
+  }
+  
+  // Now figure out what type of shader script we have,
+  // based on its MIME type.
+  var shader;
+  if (shaderScript.type == "x-shader/x-fragment") {
+    shader = gl.createShader(gl.FRAGMENT_SHADER);
+  } else if (shaderScript.type == "x-shader/x-vertex") {
+    shader = gl.createShader(gl.VERTEX_SHADER);
+  } else {
+    return null;  // Unknown shader type
+  }
+
+  // Send the source to the shader object
+  gl.shaderSource(shader, shaderSource);
+
+  // Compile the shader program
+  gl.compileShader(shader);
+
+  // See if it compiled successfully
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    alert(gl.getShaderInfoLog(shader));
+    return null;
+  }
+
+  return shader;
 }
