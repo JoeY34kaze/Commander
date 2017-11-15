@@ -30,12 +30,16 @@ var fragmentShaderText =
 var gl;
 
 
+var initEverything=function(){
+
+
+
+}
 
 var drawCube=function(scaleV){
 	//what dis do:
 	//scaleV - vektor for skeil [sx,sy,sz]
 	//
-	console.log('This is working');
 	
 		var canvas = document.getElementById('game-surface');
 		gl = canvas.getContext('webgl');
@@ -232,35 +236,35 @@ var drawCube=function(scaleV){
 
 
 
+		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 
-		//fps
-		var loop = function () {
+		
 
-			console.log(scaleMatrix);
 
-			//angle = performance.now() / 1000 / 6 * 2 * Math.PI;
-			//mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
-			//mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
-			//mat4.mul(worldMatrix, yRotationMatrix, xRotationMatrix);
-
-			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+		gl.clearColor(0.75, 0.85, 0.8, 1.0);
+		gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
 	
-			
 
-
-			gl.clearColor(0.75, 0.85, 0.8, 1.0);
-			gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	
-			requestAnimationFrame(loop);
-		};
-		requestAnimationFrame(loop);
 }
 
 
 
 var onStart = function () {
+
+	initEverything();
+	
+	
+	
+	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
+	var loop=function(){
 	drawCube([3,1,1]);
+
+
+
+	requestAnimationFrame(loop);
+	};
+	requestAnimationFrame(loop);
 };
 
 var getScaleMatrix = function(v){
