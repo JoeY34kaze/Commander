@@ -1,14 +1,18 @@
 var gl;
 
-var drawCube=function(scaleV){
-	//what dis do:
-	//scaleV - vektor for skeil [sx,sy,sz]
-	//
-	console.log('This is working');
+var drawCube=function(positionV,rotationV,angle,scaleV){
+	/*what dis do:
+	pos-pozicija(ubistvu se kamera odmika)
+	rot-vektor rotacije([1,0,0]) je okol x recimo
+	angle - kot okol prejsnga vektorja
+	scaleV - vektor for skeil [sx,sy,sz]
+
+	*/
+	
+	//console.log('This is working');
 	
 		var canvas = document.getElementById('game-surface');
 		gl = canvas.getContext('webgl');
-	
 		if (!gl) {
 			console.log('WebGL not supported, falling back on experimental-webgl');
 			gl = canvas.getContext('experimental-webgl');
@@ -167,16 +171,19 @@ var drawCube=function(scaleV){
 		var viewMatrix = new Float32Array(16);
 		var projMatrix = new Float32Array(16);
 		mat4.identity(worldMatrix);
-		mat4.lookAt(viewMatrix, [2, 2, -7], [0, 2, 0], [0, 1, 0]);//camera (position to look at, translation after that, rotation)
+		mat4.lookAt(viewMatrix, [0, 2, -7], [0,0,0], [0, 1, 0]);//camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 		mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.clientWidth / canvas.clientHeight, 0.1, 1000.0);
 	
 		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 		gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
 		gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
 	
-		var xRotationMatrix = new Float32Array(16);
-		var yRotationMatrix = new Float32Array(16);
+		var rotationMatrix 	= new Float32Array(16);
 		var scaleMatrix		= new Float32Array(16);
+		var translation		= new Float32Array(16);
+
+
+
 		//
 		// Main render loop
 		//
@@ -194,40 +201,22 @@ var drawCube=function(scaleV){
 
 		mat4.scale(scaleMatrix,identityMatrix,scaleV)
 		mat4.mul(worldMatrix,worldMatrix,scaleMatrix);
+		mat4.rotate(rotationMatrix,identityMatrix,angle,rotationV);
+		mat4.mul(worldMatrix, worldMatrix, rotationMatrix);
+		mat4.translate(worldMatrix, identityMatrix,positionV);
+
+		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+
+		
 
 
-
-
-
-		//fps
-		var loop = function () {
-
-			//console.log(scaleMatrix);
-
-			//angle = performance.now() / 1000 / 6 * 2 * Math.PI;
-			//mat4.rotate(yRotationMatrix, identityMatrix, angle, [0, 1, 0]);
-			//mat4.rotate(xRotationMatrix, identityMatrix, angle / 4, [1, 0, 0]);
-			//mat4.mul(worldMatrix, yRotationMatrix, xRotationMatrix);
-
-			gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+		gl.clearColor(0.75, 0.85, 0.8, 1.0);
+		gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+		gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
 	
-			
 
-
-			gl.clearColor(0.75, 0.85, 0.8, 1.0);
-			gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-			gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
-	
-			requestAnimationFrame(loop);
-		};
-		requestAnimationFrame(loop);
 }
 
-
-
-var onStart = function () {
-	drawCube([3,1,1]);
-};
 
 var getScaleMatrix = function(v){
 	var out = new Float32Array([
@@ -291,3 +280,19 @@ function getShader(gl, id) {
 
   return shader;
 }
+
+
+
+
+var onStart = function () {
+
+var m=0;
+	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
+	var loop = function () {
+		drawCube([m,2,0],[0,2,0],0,[3,1,1]);  //positionV,rotationV,angle,scaleV
+		m=m+0.01;
+		requestAnimationFrame(loop);
+	};
+	requestAnimationFrame(loop);
+
+};
