@@ -1,5 +1,6 @@
 var gl_global;
 var canvas_global;
+var camera;
 
 var environment=new Array; //not se loh doda z global.environment.push(obj);
 
@@ -182,8 +183,14 @@ var instantiate_cube=function(){
 
 
 }
+var initialize_camera=function(){
+	window.camera={
+		position:[0, 0.5, -6]
+	};
+}
 
 var init=function(){
+	initialize_camera();
 	instantiate_cube();
 }
 
@@ -214,7 +221,7 @@ var drawCube=function(positionV,rotationV,angle,scaleV, program, boxIndices){
 		var viewMatrix = new Float32Array(16);
 		var projMatrix = new Float32Array(16);
 		mat4.identity(worldMatrix);
-		mat4.lookAt(viewMatrix, [0, 2, -7], [0,0,0], [0, 1, 0]);//camera (pozicija kamere, kam gleda , vektor ki kaze gor)
+		mat4.lookAt(viewMatrix, window.camera.position, [0,0,0], [0, 1, 0]);//camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 		mat4.perspective(projMatrix, glMatrix.toRadian(45), window.canvas_global.clientWidth / window.canvas_global.clientHeight, 0.1, 1000.0);
 	
 		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
@@ -227,12 +234,15 @@ var drawCube=function(positionV,rotationV,angle,scaleV, program, boxIndices){
 		var identityMatrix = new Float32Array(16);
 		mat4.identity(identityMatrix);
 		//------------------------------------TRANSFORMACIJE--------------------------------------------------
+		//tipicno je TRS - translacija, rotacija, skaliranje
 
 		mat4.scale(scaleMatrix,identityMatrix,scaleV)
+		console.log(worldMatrix);
 		mat4.mul(worldMatrix,worldMatrix,scaleMatrix);
-		mat4.rotate(rotationMatrix,identityMatrix,angle,rotationV);
-		mat4.mul(worldMatrix, worldMatrix, rotationMatrix);
-		mat4.translate(worldMatrix, identityMatrix,positionV);
+		console.log(worldMatrix);
+		//mat4.rotate(rotationMatrix,identityMatrix,angle,rotationV);
+		//mat4.mul(worldMatrix, worldMatrix, rotationMatrix);
+		mat4.translate(worldMatrix, worldMatrix,positionV);
 
 		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -300,20 +310,37 @@ var onStart = function () {
 
 	init(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.
 
-	var m=0;
+
+	
+	
+	
+	
+	gameplay();//tle not djmo stlacit logiko igranja
+	
+	
+	
+	
+	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
-	var loop = function () {
+	var loop = function () {//loop ki transformira vse objekte in jih izrise
 
 
 		window.environment.forEach(function(object){
 			//console.log(window.environment);
 
-			drawCube([0,0,0],[0,2,0],0,[3,1,1],object.program,object.boxIndices);  //positionV,rotationV,angle,scaleV
-			
+			drawCube([0,-2,0],[0,0,0],0,[2,1,1],object.program,object.boxIndices);  //positionV,rotationV,angle,scaleV, dva parametra ki sta nujna za webgl engine
+			//! rotacija zgleda da nedela(sj naceloma je skor nebomo rabil)
+			throw new Error();
 		});
 
 		requestAnimationFrame(loop);
+		
 	};
 	requestAnimationFrame(loop);
 
 };
+
+
+var gameplay=function(){//do stuff
+
+}
