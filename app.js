@@ -19,7 +19,7 @@ var onStart = function () {
 
 	initShaders();
 
-	init(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
+	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function () { //loop ki transformira vse objekte in jih izrise
@@ -151,7 +151,7 @@ var objectsVI = {
 	]
 };
 
-var init = function() {
+var initGame = function() {
 	// init camera
 	camera = {
 		position:[0, 0.5, -6]
