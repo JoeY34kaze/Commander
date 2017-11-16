@@ -187,6 +187,8 @@ var onStart = function () {
 
 	init(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
 	
+	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
+	var update = function () { //loop ki transformira vse objekte in jih izrise
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -194,8 +196,6 @@ var onStart = function () {
 		gl.enable(gl.CULL_FACE);
 		gl.enable(gl.DEPTH_TEST);
 		gl.frontFace(gl.CCW);
-	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
-	var update = function () { //loop ki transformira vse objekte in jih izrise
 
 		gameplay();
 
