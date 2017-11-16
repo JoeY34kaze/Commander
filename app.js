@@ -1,73 +1,12 @@
-var gl_global;
-var canvas_global;
-var camera;
-
 var environment = []; //not se loh doda z global.environment.push(obj);
 
-
-//var vs_global;
-//var fs_global;
-var kek;
-var program_global;
-var boxIndices_global;
-
-var instantiate_cube = function() {
-	window.canvas_global = document.getElementById('game-surface');
-	let gl = window.canvas_global.getContext('webgl');
-	if (!gl) {
-		console.log('WebGL not supported, falling back on experimental-webgl');
-		gl = window.canvas_global.getContext('experimental-webgl');
-	}
-
-	if (!gl) {
-		alert('Your browser does not support WebGL');
-	}
-
-	gl.clearColor(0.75, 0.85, 0.8, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	gl.enable(gl.DEPTH_TEST);
-	gl.enable(gl.CULL_FACE);
-	gl.frontFace(gl.CCW);
-	gl.cullFace(gl.BACK);
-
-
-	//
-	// Create shaders
-	// 
-	var fragmentShader = getShader(gl, "shader-fs");
-	var vertexShader = getShader(gl, "shader-vs");
-
-	gl.compileShader(vertexShader);
-	if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-		console.error('ERROR compiling vertex shader!', gl.getShaderInfoLog(vertexShader));
-		return;
-	}
-  
-	gl.compileShader(fragmentShader);
-	if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-		console.error('ERROR compiling fragment shader!', gl.getShaderInfoLog(fragmentShader));
-		return;
-	}
-
-	let program = gl.createProgram();
-	gl.attachShader(program, vertexShader);
-	gl.attachShader(program, fragmentShader);
-	gl.linkProgram(program);
-	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-		console.error('ERROR linking program!', gl.getProgramInfoLog(program));
-		return;
-	}
-	gl.validateProgram(program);
-	if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-		console.error('ERROR validating program!', gl.getProgramInfoLog(program));
-		return;
-	}
+var instantiateCube = function(position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
 
 	//
 	// Create buffer
 	//
-	var boxVertices = 
-	[ // X, Y, Z           R, G, B
+	// X, Y, Z           R, G, B
+	let boxVertices = [ 
 		// Top
 		-1.0, 1.0, -1.0,   0.5, 0.5, 0.5,
 		-1.0, 1.0, 1.0,    0.5, 0.5, 0.5,
@@ -105,8 +44,7 @@ var instantiate_cube = function() {
 		1.0, -1.0, -1.0,    0.5, 0.5, 1.0,
 	];
   
-	var boxIndices =
-	[
+	let boxIndices = [
 		// Top
 		0, 1, 2,
 		0, 2, 3,
@@ -132,119 +70,190 @@ var instantiate_cube = function() {
 		22, 20, 23
 	];
   
-	var boxVertexBufferObject = gl.createBuffer();
+	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(boxVertices), gl.STATIC_DRAW);
   
-	var boxIndexBufferObject = gl.createBuffer();
+	let boxIndexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(boxIndices), gl.STATIC_DRAW);
+
+	let shaderProgram = createShaderProgram();
   
-	var positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
-	var colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
-	gl.vertexAttribPointer(
-		positionAttribLocation, // Attribute location
-		3, // Number of elements per attribute
-		gl.FLOAT, // Type of elements
-		gl.FALSE,
-		6 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-		0 // Offset from the beginning of a single vertex to this attribute
-	);
-	gl.vertexAttribPointer(
-		colorAttribLocation, // Attribute location
-		3, // Number of elements per attribute
-		gl.FLOAT, // Type of elements
-		gl.FALSE,
-		6 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-		3 * Float32Array.BYTES_PER_ELEMENT // Offset from the beginning of a single vertex to this attribute
-	);
+	let positionAttribLocation = gl.getAttribLocation(shaderProgram, 'vertPosition');
+	let colorAttribLocation = gl.getAttribLocation(shaderProgram, 'vertColor');
+ 
+	// gl.vertexAttribPointer(
+	//   Attribute location, 
+	//   Number of elements per attribute, 
+	//   Type of elements, 
+	//   , 
+	//   Size of an individual vertex, 
+	//   Offset from the beginning of a single vertex to this attribute
+	// );
+	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+	gl.vertexAttribPointer(colorAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
   
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
 
-
-	window.gl_global = gl;
-	//window.vs_global=vertexShader;
-	//window.fs_global=fragmentShader;
-	//window.program_global=program;
-	//window.boxIndices_global=boxIndices;
-
-
-	var platform_cube = {
-		program:program,
-		boxIndices:boxIndices,
+	var object = {
+		program: shaderProgram,
+		indices: boxIndices,
+		position: position,
+		rotation: rotation,
+		angle: 0,
+		scale: scale
 	};
 
-	window.environment.push(platform_cube);
-
-
-};
-var initialize_camera = function() {
-	window.camera = {
-		position:[0, 0.5, -6]
-	};
+	environment.push(object);
 };
 
 var init = function() {
-	initialize_camera();
-	instantiate_cube();
+	// init camera
+	camera = {
+		position:[0, 0.5, -6]
+	};
+	instantiateCube([0, -1, 0]);
+	instantiateCube([0, -2, 0], undefined, [2, 1, 1]);
+	console.log(environment);
 };
 
-
-var drawCube = function(positionV,rotationV,angle,scaleV, program, boxIndices) {
-	/*what dis do:
+/*what dis do:
 	pos-pozicija(ubistvu se kamera odmika)
 	rot-vektor rotacije([1,0,0]) je okol x recimo
 	angle - kot okol prejsnga vektorja
 	scaleV - vektor for skeil [sx,sy,sz]
 
 	*/
-	
-	//console.log('This is working');
-		var gl = window.gl_global;
-		//var fragmentShader=window.fs_global;
-		//var vertexShader=window.vs_global;
-		//var program=window.program_global;
-		//var boxIndices=window.boxIndices_global;
-		// Tell OpenGL state machine which program should be active.
-		gl.useProgram(program);
-	
-		var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld');
-		var matViewUniformLocation = gl.getUniformLocation(program, 'mView');
-		var matProjUniformLocation = gl.getUniformLocation(program, 'mProj');
-	
-		var worldMatrix = new Float32Array(16);
-		var viewMatrix = new Float32Array(16);
-		var projMatrix = new Float32Array(16);
-		mat4.identity(worldMatrix);
-		mat4.lookAt(viewMatrix, window.camera.position, [0,0,0], [0, 1, 0]);//camera (pozicija kamere, kam gleda , vektor ki kaze gor)
-		mat4.perspective(projMatrix, glMatrix.toRadian(45), window.canvas_global.clientWidth / window.canvas_global.clientHeight, 0.1, 1000.0);
-	
-		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
-		gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
-		gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
-	
-		var rotationMatrix 	= new Float32Array(16);
-		var scaleMatrix		= new Float32Array(16);
-		var translation		= new Float32Array(16);
-		var identityMatrix = new Float32Array(16);
-		mat4.identity(identityMatrix);
-		//------------------------------------TRANSFORMACIJE--------------------------------------------------
-		//tipicno je TRS - translacija, rotacija, skaliranje
+var draw = function(object) {
+	let program = object.program;
 
-		mat4.scale(scaleMatrix,identityMatrix,scaleV);
-		console.log(worldMatrix);
-		mat4.mul(worldMatrix,worldMatrix,scaleMatrix);
-		console.log(worldMatrix);
-		//mat4.rotate(rotationMatrix,identityMatrix,angle,rotationV);
-		//mat4.mul(worldMatrix, worldMatrix, rotationMatrix);
-		mat4.translate(worldMatrix, worldMatrix,positionV);
+	gl.useProgram(program);
 
-		gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
-		gl.clearColor(0.75, 0.85, 0.8, 1.0);
-		gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
-		gl.drawElements(gl.TRIANGLES, boxIndices.length, gl.UNSIGNED_SHORT, 0);
+	var matWorldUniformLocation = gl.getUniformLocation(program, 'mWorld');
+	var matViewUniformLocation = gl.getUniformLocation(program, 'mView');
+	var matProjUniformLocation = gl.getUniformLocation(program, 'mProj');
+
+	var worldMatrix = new Float32Array(16);
+	var viewMatrix = new Float32Array(16);
+	var projMatrix = new Float32Array(16);
+	mat4.identity(worldMatrix);
+	mat4.lookAt(viewMatrix, camera.position, [0,0,0], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
+	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
+
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+	gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
+	gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
+
+	var rotationMatrix 	= new Float32Array(16);
+	var scaleMatrix		= new Float32Array(16);
+	var translation		= new Float32Array(16);
+	var identityMatrix = new Float32Array(16);
+	mat4.identity(identityMatrix);
+	//------------------------------------TRANSFORMACIJE--------------------------------------------------
+	//tipicno je TRS - translacija, rotacija, skaliranje
+
+	mat4.scale(scaleMatrix,identityMatrix,object.scale);
+	//console.log(worldMatrix);
+	mat4.mul(worldMatrix,worldMatrix,scaleMatrix);
+	//console.log(worldMatrix);
+	//mat4.rotate(rotationMatrix,identityMatrix,angle,rotationV);
+	//mat4.mul(worldMatrix, worldMatrix, rotationMatrix);
+	mat4.translate(worldMatrix, worldMatrix,object.position);
+
+	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);
 };
+
+var canvas;
+var gl;
+
+var vertexShader;
+var fragmentShader;
+
+var camera;
+
+var onStart = function () {
+
+	canvas = document.getElementById('game-surface');
+	gl = initGL(canvas);
+
+	if(!gl) {
+		return;
+	}
+
+	initShaders();
+
+	init(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
+	
+
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.clearColor(0.75, 0.85, 0.8, 1.0);
+		gl.cullFace(gl.BACK);
+		gl.enable(gl.CULL_FACE);
+		gl.enable(gl.DEPTH_TEST);
+		gl.frontFace(gl.CCW);
+	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
+	var update = function () { //loop ki transformira vse objekte in jih izrise
+
+		gameplay();
+
+		environment.forEach(function(object) {
+			draw(object);
+		});
+
+		requestAnimationFrame(update);
+	};
+	requestAnimationFrame(update);
+
+};
+
+var gameplay = function() {//do stuff
+
+};
+
+function initGL(canvas) {
+	let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+	if (!gl) {
+		alert('No WebGL context found.');
+	}
+	return gl;
+}
+
+function initShaders() {
+	fragmentShader = getShader(gl, "shader-fs");
+	vertexShader = getShader(gl, "shader-vs");
+
+	gl.compileShader(vertexShader);
+	if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+		console.error('ERROR compiling vertex shader!', gl.getShaderInfoLog(vertexShader));
+		return;
+	}
+  
+	gl.compileShader(fragmentShader);
+	if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+		console.error('ERROR compiling fragment shader!', gl.getShaderInfoLog(fragmentShader));
+		return;
+	}
+}
+
+function createShaderProgram() {
+	let program = gl.createProgram();
+	gl.attachShader(program, vertexShader);
+	gl.attachShader(program, fragmentShader);
+	gl.linkProgram(program);
+	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+		console.error('ERROR linking program!', gl.getProgramInfoLog(program));
+		return;
+	}
+	gl.validateProgram(program);
+	if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+		console.error('ERROR validating program!', gl.getProgramInfoLog(program));
+		return;
+	}
+	return program;
+}
 
 //
 // getShader
@@ -298,32 +307,3 @@ function getShader(gl, id) {
 
   return shader;   
 }
-
-var onStart = function () {
-
-	init(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
-	
-	gameplay();//tle not djmo stlacit logiko igranja
-	
-	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
-	var loop = function () {//loop ki transformira vse objekte in jih izrise
-
-		window.environment.forEach(function(object) {
-			//console.log(window.environment);
-
-			drawCube([0,-2,0],[0,0,0],0,[2,1,1],object.program,object.boxIndices);  //positionV,rotationV,angle,scaleV, dva parametra ki sta nujna za webgl engine
-			//! rotacija zgleda da nedela(sj naceloma je skor nebomo rabil)
-			throw new Error();
-		});
-
-		requestAnimationFrame(loop);
-		
-	};
-	requestAnimationFrame(loop);
-
-};
-
-
-var gameplay = function() {//do stuff
-
-};
