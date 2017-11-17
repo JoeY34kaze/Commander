@@ -5,6 +5,7 @@ var vertexShader;
 var fragmentShader;
 
 var camera;
+var player;
 
 var environment = []; //not se loh doda z global.environment.push(obj);
 
@@ -19,7 +20,10 @@ var onStart = function () {
 
 	initShaders();
 
-	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.	
+	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.
+
+	document.onkeydown = handleKeyDown;
+	document.onkeyup = handleKeyUp;
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function () { //loop ki transformira vse objekte in jih izrise
@@ -41,6 +45,10 @@ var onStart = function () {
 	};
 	requestAnimationFrame(update);
 
+};
+
+var gameplay = function() {//do stuff
+	handleKeys();
 };
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
@@ -83,6 +91,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	};
 
 	environment.push(object);
+	return object;
 }
 
 var objectsVI = {
@@ -158,6 +167,7 @@ var initGame = function() {
 	};
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -1, 0]);
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -2.5, 0], undefined, [2, 1, 1]);
+	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [2, -0.5, 0], undefined, [0.4, 0.75, 0.4]);
 	console.log(environment);
 };
 
@@ -199,12 +209,43 @@ var draw = function(object) {
 	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);
 };
 
+var currentlyPressedKeys = {};
 
+function handleKeys() {
+	// tipko drzimo ...
+	if (currentlyPressedKeys[37]) {
+		// Left cursor key
+		player.position[0] += 0.01;
+	}
+	if (currentlyPressedKeys[39]) {
+		// Right cursor key
+		player.position[0] -= 0.01;
+	}
+	if (currentlyPressedKeys[38]) {
+		// Up cursor key
+		player.position[1] += 0.01;
+	}
+	if (currentlyPressedKeys[40]) {
+		// Down cursor key
+		player.position[1] -= 0.01;
+	}
+}
 
+function handleKeyDown(event) {
+	// storing the pressed state for individual key
+	currentlyPressedKeys[event.keyCode] = true;
 
-var gameplay = function() {//do stuff
+	if (event.keyCode == 32) { 
+		// SPACE KEY
+		console.log("jump?");
+		player.position[1] += 0.5;
+	}
+}
 
-};
+function handleKeyUp(event) {
+	// reseting the pressed state for individual key
+	currentlyPressedKeys[event.keyCode] = false;
+}
 
 function initGL(canvas) {
 	let gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
