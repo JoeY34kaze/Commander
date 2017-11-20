@@ -75,14 +75,14 @@ function initPhysics() {
 	// Ustvari "svet", v katerem deluje gravitacija in collision detection.
 	// V ta svet se nato dodajajo telesa (body) vsakega objekta.
 	world = new CANNON.World();
-	world.gravity.set(0, -5, 0); // gravitacija po Y
+	world.gravity.set(0, -10, 0); // gravitacija po Y
 
 	// Materiali določajo, kako posamezna telesa reagirajo med seboj
 	materials.frictionless = new CANNON.Material("frictionlessMaterial");
 	// TODO: potweakaj, da ne bo bounca
 	let mat_frictionless = new CANNON.ContactMaterial(materials.frictionless, materials.frictionless, {
 		friction: 0,
-		//restitution: 0.3,
+		restitution: 0,
 		//contactEquationStiffness: 1e8,
 		//contactEquationRelaxation: 3,
 		//frictionEquationStiffness: 1e8,
@@ -123,13 +123,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	gl.enableVertexAttribArray(colorAttribLocation);
 
 	// Objektu damo body za uporabo v physics world-u.
-	let body = new CANNON.Body({
-		mass: 0, // privzeto brez mase (staticen objekt, neodziven na gravitacijo ali trke)
-		position: new CANNON.Vec3(position[0], position[1], position[2]), // pozicija
-		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])), // privzeta oblike je kvader, navedemo njegovo velikost (xyz)
-		fixedRotation: true, // telo se ne rotira ob trku (oz. delovanju drugih sil)
-		material: materials.frictionless, // material telesa
-	});
+	let body = createBody(position, scale, 0, materials.frictionless);
 	// Telo dodaj v physics world
 	world.addBody(body);
 
@@ -147,44 +141,55 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	return object;
 }
 
+function createBody(position, scale, mass = 0, material = undefined) {
+	let body = new CANNON.Body({
+		mass: mass, // privzeto brez mase (staticen objekt, neodziven na gravitacijo ali trke)
+		position: new CANNON.Vec3(position[0], position[1], position[2]), // pozicija
+		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])), // privzeta oblike je kvader, navedemo njegovo velikost (xyz)
+		fixedRotation: true, // telo se ne rotira ob trku (oz. delovanju drugih sil)
+		material: material, // material telesa
+	});
+	return body;
+}
+
 var objectsVI = {
 	// X, Y, Z           R, G, B
 	boxVertices: [ 
 		// Top
-		-1.0, 1.0, -1.0,   0.5, 0.5, 0.5,
-		-1.0, 1.0, 1.0,    0.5, 0.5, 0.5,
-		1.0, 1.0, 1.0,     0.5, 0.5, 0.5,
-		1.0, 1.0, -1.0,    0.5, 0.5, 0.5,
+		-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
+		-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
+		1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
+		1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
 
 		// Left
-		-1.0, 1.0, 1.0,    0.75, 0.25, 0.5,
-		-1.0, -1.0, 1.0,   0.75, 0.25, 0.5,
-		-1.0, -1.0, -1.0,  0.75, 0.25, 0.5,
-		-1.0, 1.0, -1.0,   0.75, 0.25, 0.5,
+		-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+		-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+		-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+		-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
 
 		// Right
-		1.0, 1.0, 1.0,    0.25, 0.25, 0.75,
-		1.0, -1.0, 1.0,   0.25, 0.25, 0.75,
-		1.0, -1.0, -1.0,  0.25, 0.25, 0.75,
-		1.0, 1.0, -1.0,   0.25, 0.25, 0.75,
+		1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+		1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+		1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+		1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
 
 		// Front
-		1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
-		1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-		-1.0, -1.0, 1.0,    1.0, 0.0, 0.15,
-		-1.0, 1.0, 1.0,    1.0, 0.0, 0.15,
+		1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
+		1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
+		-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
+		-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
 
 		// Back
-		1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
-		1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-		-1.0, -1.0, -1.0,    0.0, 1.0, 0.15,
-		-1.0, 1.0, -1.0,    0.0, 1.0, 0.15,
+		1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
+		1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
+		-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
+		-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
 
 		// Bottom
-		-1.0, -1.0, -1.0,   0.5, 0.5, 1.0,
-		-1.0, -1.0, 1.0,    0.5, 0.5, 1.0,
-		1.0, -1.0, 1.0,     0.5, 0.5, 1.0,
-		1.0, -1.0, -1.0,    0.5, 0.5, 1.0,
+		-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
+		-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
+		1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
+		1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
 	],
 	boxIndices: [
 		// Top
@@ -216,16 +221,16 @@ var objectsVI = {
 var initGame = function() {
 	// init camera
 	camera = {
-		position:[0, 0, -10]
+		position:[0, 0, 10]
 	};
 
 	initPhysics();
 
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [2, 1, 3]);
-	//createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -2.5, 0], undefined, [2, 1, 3]);
-	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [2, -0.5, 0], undefined, [0.5, 1, 0.4]);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]);
+	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
 	
-	player.body.mass = 1;
+	player.body.mass = 30;
 	player.body.type = CANNON.Body.DYNAMIC;
 	player.body.updateMassProperties();
 
@@ -276,10 +281,10 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 	// tipko drzimo ...
-	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = +2 }
-	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = -2 }
-	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = +2 }
-	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = -2 }
+	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = -2 }
+	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = +2 }
+	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = -2 }
+	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = +2 }
 
 	if (!currentlyPressedKeys["ArrowLeft"] && !currentlyPressedKeys["ArrowRight"]) {
 		player.body.velocity.x = 0;
@@ -294,8 +299,8 @@ function handleKeyDown(event) {
 	currentlyPressedKeys[event.code] = true;
 
 	if (event.code == "Space") { 
-		console.log("jump?");
-		player.body.velocity.y += 2.5;
+		// do jump
+		player.body.velocity.y = 6;
 	}
 }
 
