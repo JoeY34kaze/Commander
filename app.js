@@ -22,13 +22,14 @@ var onStart = function () {
 
 	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.
 
+	// inicializacija keyboard listenerjev
 	document.onkeydown = handleKeyDown;
 	document.onkeyup = handleKeyUp;
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function (time) { //loop ki transformira vse objekte in jih izrise
 
-		runPhysics();
+		updatePhysics(time);
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -43,18 +44,24 @@ var onStart = function () {
 			draw(object);
 		});
 
-		function runPhysics() {
-			if(lastTime !== undefined) {
-				var dt = (time - lastTime) / 1000;
-				world.step(fixedTimeStep, dt, maxSubSteps);
-			}
-			lastTime = time;
-		}
-
 		requestAnimationFrame(update);
 	};
-	requestAnimationFrame(update);
 
+	// procesiranje gravitacije, collision detection-a
+	var fixedTimeStep = 1.0 / 60.0; // seconds
+	var maxSubSteps = 3;
+	var lastTime;
+	var updatePhysics = function(time) {
+		if(lastTime !== undefined) {
+			var dt = (time - lastTime) / 1000;
+			world.step(fixedTimeStep, dt, maxSubSteps);
+		}
+		lastTime = time;
+	};
+
+
+
+	requestAnimationFrame(update);
 };
 
 var gameplay = function() {//do stuff
@@ -63,28 +70,26 @@ var gameplay = function() {//do stuff
 
 var world;
 var materials = {};
-var fixedTimeStep = 1.0 / 60.0; // seconds
-var maxSubSteps = 3;
-var lastTime;
 
 function initPhysics() {
-	// Setup our world
+	// Ustvari "svet", v katerem deluje gravitacija in collision detection.
+	// V ta svet se nato dodajajo telesa (body) vsakega objekta.
 	world = new CANNON.World();
-	world.gravity.set(0, -5, 0); // m/s²
+	world.gravity.set(0, -5, 0); // gravitacija po Y
 
-	// Materials
-	materials.ground = new CANNON.Material("groundMaterial");
-	// Adjust constraint equation parameters for ground/ground contact
-	let ground_ground_cm = new CANNON.ContactMaterial(materials.ground, materials.ground, {
-	friction: 0,
-	restitution: 0.3,
-	contactEquationStiffness: 1e8,
-	contactEquationRelaxation: 3,
-	frictionEquationStiffness: 1e8,
-	frictionEquationRegularizationTime: 3,
+	// Materiali določajo, kako posamezna telesa reagirajo med seboj
+	materials.frictionless = new CANNON.Material("frictionlessMaterial");
+	// TODO: potweakaj, da ne bo bounca
+	let mat_frictionless = new CANNON.ContactMaterial(materials.frictionless, materials.frictionless, {
+		friction: 0,
+		//restitution: 0.3,
+		//contactEquationStiffness: 1e8,
+		//contactEquationRelaxation: 3,
+		//frictionEquationStiffness: 1e8,
+		//frictionEquationRegularizationTime: 3,
 	});
-	// Add contact material to the world
-	world.addContactMaterial(ground_ground_cm);
+
+	world.addContactMaterial(mat_frictionless);
 }
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
@@ -117,19 +122,21 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
 
+	// Objektu damo body za uporabo v physics world-u.
 	let body = new CANNON.Body({
-		mass: 0,
-		position: new CANNON.Vec3(position[0], position[1], position[2]),
-		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])),
-		fixedRotation: true,
-		material: materials.ground,
+		mass: 0, // privzeto brez mase (staticen objekt, neodziven na gravitacijo ali trke)
+		position: new CANNON.Vec3(position[0], position[1], position[2]), // pozicija
+		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])), // privzeta oblike je kvader, navedemo njegovo velikost (xyz)
+		fixedRotation: true, // telo se ne rotira ob trku (oz. delovanju drugih sil)
+		material: materials.frictionless, // material telesa
 	});
+	// Telo dodaj v physics world
 	world.addBody(body);
 
 	var object = {
 		program: shaderProgram,
 		indices: indices,
-		//position: position, // ! use body.position
+		//position: position, // !! use body.position !!
 		rotation: rotation,
 		angle: 0,
 		scale: scale,
