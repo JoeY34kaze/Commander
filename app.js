@@ -26,7 +26,9 @@ var onStart = function () {
 	document.onkeyup = handleKeyUp;
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
-	var update = function () { //loop ki transformira vse objekte in jih izrise
+	var update = function (time) { //loop ki transformira vse objekte in jih izrise
+
+		runPhysics();
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -41,6 +43,14 @@ var onStart = function () {
 			draw(object);
 		});
 
+		function runPhysics() {
+			if(lastTime !== undefined) {
+				var dt = (time - lastTime) / 1000;
+				world.step(fixedTimeStep, dt, maxSubSteps);
+			}
+			lastTime = time;
+		}
+
 		requestAnimationFrame(update);
 	};
 	requestAnimationFrame(update);
@@ -50,6 +60,32 @@ var onStart = function () {
 var gameplay = function() {//do stuff
 	handleKeys();
 };
+
+var world;
+var materials = {};
+var fixedTimeStep = 1.0 / 60.0; // seconds
+var maxSubSteps = 3;
+var lastTime;
+
+function initPhysics() {
+	// Setup our world
+	world = new CANNON.World();
+	world.gravity.set(0, -5, 0); // m/s²
+
+	// Materials
+	materials.ground = new CANNON.Material("groundMaterial");
+	// Adjust constraint equation parameters for ground/ground contact
+	let ground_ground_cm = new CANNON.ContactMaterial(materials.ground, materials.ground, {
+	friction: 0,
+	restitution: 0.3,
+	contactEquationStiffness: 1e8,
+	contactEquationRelaxation: 3,
+	frictionEquationStiffness: 1e8,
+	frictionEquationRegularizationTime: 3,
+	});
+	// Add contact material to the world
+	world.addContactMaterial(ground_ground_cm);
+}
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
 function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
@@ -81,13 +117,23 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
 
+	let body = new CANNON.Body({
+		mass: 0,
+		position: new CANNON.Vec3(position[0], position[1], position[2]),
+		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])),
+		fixedRotation: true,
+		material: materials.ground,
+	});
+	world.addBody(body);
+
 	var object = {
 		program: shaderProgram,
 		indices: indices,
-		position: position,
+		//position: position, // ! use body.position
 		rotation: rotation,
 		angle: 0,
-		scale: scale
+		scale: scale,
+		body: body
 	};
 
 	environment.push(object);
@@ -163,11 +209,19 @@ var objectsVI = {
 var initGame = function() {
 	// init camera
 	camera = {
-		position:[0, 0.5, -6]
+		position:[0, 0, -10]
 	};
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -1, 0]);
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -2.5, 0], undefined, [2, 1, 1]);
-	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [2, -0.5, 0], undefined, [0.4, 0.75, 0.4]);
+
+	initPhysics();
+
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [2, 1, 3]);
+	//createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -2.5, 0], undefined, [2, 1, 3]);
+	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [2, -0.5, 0], undefined, [0.5, 1, 0.4]);
+	
+	player.body.mass = 1;
+	player.body.type = CANNON.Body.DYNAMIC;
+	player.body.updateMassProperties();
+
 	console.log(environment);
 };
 
@@ -188,6 +242,7 @@ var draw = function(object) {
 	mat4.identity(worldMatrix);
 	mat4.lookAt(viewMatrix, camera.position, [0,0,0], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
+	//mat4.identity(projMatrix);
 
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 	gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
@@ -198,7 +253,8 @@ var draw = function(object) {
 	let transformMatrix = new Float32Array(16);
 	mat4.identity(transformMatrix);
 
-	mat4.translate(transformMatrix, transformMatrix, object.position);
+	let pos = object.body.position;
+	mat4.translate(transformMatrix, transformMatrix, [pos.x, pos.y, pos.z]);
 	mat4.scale(transformMatrix, transformMatrix, object.scale);
 	// TODO: implementiraj se rotacije ??? mogoce je potrebno drugace podati rotacije kot trenutno
 	//mat4.rotate(transformMatrix, ???);
@@ -213,38 +269,32 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 	// tipko drzimo ...
-	if (currentlyPressedKeys[37]) {
-		// Left cursor key
-		player.position[0] += 0.01;
+	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = +2 }
+	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = -2 }
+	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = +2 }
+	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = -2 }
+
+	if (!currentlyPressedKeys["ArrowLeft"] && !currentlyPressedKeys["ArrowRight"]) {
+		player.body.velocity.x = 0;
 	}
-	if (currentlyPressedKeys[39]) {
-		// Right cursor key
-		player.position[0] -= 0.01;
-	}
-	if (currentlyPressedKeys[38]) {
-		// Up cursor key
-		player.position[1] += 0.01;
-	}
-	if (currentlyPressedKeys[40]) {
-		// Down cursor key
-		player.position[1] -= 0.01;
+	if (!currentlyPressedKeys["ArrowUp"] && !currentlyPressedKeys["ArrowDown"]) {
+		player.body.velocity.z = 0;
 	}
 }
 
 function handleKeyDown(event) {
 	// storing the pressed state for individual key
-	currentlyPressedKeys[event.keyCode] = true;
+	currentlyPressedKeys[event.code] = true;
 
-	if (event.keyCode == 32) { 
-		// SPACE KEY
+	if (event.code == "Space") { 
 		console.log("jump?");
-		player.position[1] += 0.5;
+		player.body.velocity.y += 2.5;
 	}
 }
 
 function handleKeyUp(event) {
 	// reseting the pressed state for individual key
-	currentlyPressedKeys[event.keyCode] = false;
+	currentlyPressedKeys[event.code] = false;
 }
 
 function initGL(canvas) {

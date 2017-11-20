@@ -15,6 +15,6 @@
         "space-before-blocks": ["warn"]
     },
     "globals": {
-        "glMatrix", "mat4", "vec3", "vec4"
+        "glMatrix", "mat4", "vec3", "vec4", "CANNON"
     }
 }
