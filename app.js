@@ -234,8 +234,29 @@ var initGame = function() {
 	player.body.type = CANNON.Body.DYNAMIC;
 	player.body.updateMassProperties();
 
+	player.data = {};
+	player.data.speed = 3;
+	player.data.canJump = false;
+
+	var contactNormal = new CANNON.Vec3();
+	var upAxis = new CANNON.Vec3(0,1,0);
+	player.body.addEventListener("collide", function(event) {
+		var contact = event.contact;
+
+		// contact.bi and contact.bj are the colliding bodies, and contact.ni is the collision normal.
+		// We do not yet know which one is which! Let's check.
+		if(contact.bi.id == player.id)  // bi is the player body, flip the contact normal
+			contact.ni.negate(contactNormal);
+		else
+			contactNormal.copy(contact.ni); // bi is something else. Keep the normal as it is
+
+		// If contactNormal.dot(upAxis) is between 0 and 1, we know that the contact normal is somewhat in the up direction.
+		if(contactNormal.dot(upAxis) > 0.5) // Use a "good" threshold value between 0 and 1 here!
+		player.data.canJump = true;
+	});
+
 	console.log(environment);
-};
+}; 
 
 // izrise izbran objekt
 var draw = function(object) {
@@ -281,10 +302,10 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 	// tipko drzimo ...
-	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = -2 }
-	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = +2 }
-	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = -2 }
-	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = +2 }
+	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = -player.data.speed }
+	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = +player.data.speed }
+	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = -player.data.speed }
+	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = +player.data.speed }
 
 	if (!currentlyPressedKeys["ArrowLeft"] && !currentlyPressedKeys["ArrowRight"]) {
 		player.body.velocity.x = 0;
@@ -298,8 +319,11 @@ function handleKeyDown(event) {
 	// storing the pressed state for individual key
 	currentlyPressedKeys[event.code] = true;
 
-	if (event.code == "Space") { 
+	console.log(CANNON.ObjectCollisionMatrix());
+
+	if (player.data.canJump && event.code == "Space") { 
 		// do jump
+		player.data.canJump = false;
 		player.body.velocity.y = 6;
 	}
 }
