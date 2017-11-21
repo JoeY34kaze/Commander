@@ -25,7 +25,7 @@ var onStart = function () {
 	// inicializacija keyboard listenerjev
 	document.onkeydown = handleKeyDown;
 	document.onkeyup = handleKeyUp;
-	
+
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function (time) { //loop ki transformira vse objekte in jih izrise
 
@@ -98,27 +98,27 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-  
+
 	let boxIndexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(indices), gl.STATIC_DRAW);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
 	let shaderProgram = createShaderProgram();
-  
+
 	let positionAttribLocation = gl.getAttribLocation(shaderProgram, 'vertPosition');
 	let colorAttribLocation = gl.getAttribLocation(shaderProgram, 'vertColor');
- 
+
 	// gl.vertexAttribPointer(
-	//   Attribute location, 
-	//   Number of elements per attribute, 
-	//   Type of elements, 
-	//   , 
-	//   Size of an individual vertex, 
+	//   Attribute location,
+	//   Number of elements per attribute,
+	//   Type of elements,
+	//   ,
+	//   Size of an individual vertex,
 	//   Offset from the beginning of a single vertex to this attribute
 	// );
 	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
 	gl.vertexAttribPointer(colorAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-  
+
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
 
@@ -154,7 +154,7 @@ function createBody(position, scale, mass = 0, material = undefined) {
 
 var objectsVI = {
 	// X, Y, Z           R, G, B
-	boxVertices: [ 
+	boxVertices: [
 		// Top
 		-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
 		-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
@@ -225,16 +225,26 @@ var objectsVI = {
 var initObjFiles=function(){
 
 	var client = new XMLHttpRequest();
-	client.open('GET', './aKey.obj');
+	client.open('GET', './banana.obj');
 	client.onreadystatechange = function() {
 		var mesh=new OBJ.Mesh(client.responseText);
-	  console.log(mesh.vertices);
-		OBJ.initMeshBuffers(gl,mesh);
-	  	createObject(mesh.vertices,mesh.indices,[0,2,0]);
+		var vertices=new Array();
+		for(var i=0; i<mesh.vertices.length; i+=3){
+			for(var j=0; j<3; j++){
+				vertices.push(mesh.vertices[i+j]);
+			}
+			for(var j=0; j<3; j++){
+				vertices.push(0.5);
+			}
+
+		}
+		//console.log(vertices);
+		//console.log(mesh.indices);
+		createObject(vertices,mesh.indices,[0,2,0]);
 	}
 	client.send();
 
-	
+
 
 }
 
@@ -250,7 +260,7 @@ var initGame = function() {
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]);
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]);
 	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
-	
+
 	player.body.mass = 30;
 	player.body.type = CANNON.Body.DYNAMIC;
 	player.body.updateMassProperties();
@@ -277,8 +287,8 @@ var initGame = function() {
 	});
 
 	console.log(environment);
-	
-}; 
+
+};
 
 // izrise izbran objekt
 var draw = function(object) {
@@ -343,7 +353,7 @@ function handleKeyDown(event) {
 
 	console.log(CANNON.ObjectCollisionMatrix());
 
-	if (player.data.canJump && event.code == "Space") { 
+	if (player.data.canJump && event.code == "Space") {
 		// do jump
 		player.data.canJump = false;
 		player.body.velocity.y = 6;
@@ -372,7 +382,7 @@ function initShaders() {
 		console.error('ERROR compiling vertex shader!', gl.getShaderInfoLog(vertexShader));
 		return;
 	}
-  
+
 	gl.compileShader(fragmentShader);
 	if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
 		console.error('ERROR compiling fragment shader!', gl.getShaderInfoLog(fragmentShader));
@@ -423,7 +433,7 @@ function getShader(gl, id) {
 	}
 	currentChild = currentChild.nextSibling;
   }
-  
+
   // Now figure out what type of shader script we have,
   // based on its MIME type.
   var shader;
@@ -447,5 +457,5 @@ function getShader(gl, id) {
 	return null;
   }
 
-  return shader;   
+  return shader;
 }
