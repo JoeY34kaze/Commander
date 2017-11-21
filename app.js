@@ -221,7 +221,7 @@ var objectsVI = {
 var initGame = function() {
 	// init camera
 	camera = {
-		position:[0, 0, 10]
+		position:[-4, 3, 15]
 	};
 
 	initPhysics();
@@ -273,7 +273,10 @@ var draw = function(object) {
 	let projMatrix = new Float32Array(16);
 
 	mat4.identity(worldMatrix);
-	mat4.lookAt(viewMatrix, camera.position, [0,0,0], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
+	var cam=player.body.position;
+	cam=[cam.x+camera.position[0],cam.y+camera.position[1],cam.z+camera.position[2]];//tukej se naredi mal offseta
+	console.log(cam);
+	mat4.lookAt(viewMatrix, cam, [player.body.position.x,player.body.position.y+1,player.body.position.z], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
