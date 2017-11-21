@@ -58,6 +58,10 @@ var onStart = function () {
 				player.data.shootCooldown -= dt;
 			}
 			world.step(fixedTimeStep, dt, maxSubSteps);
+			for(var i = world.removeQueue.length - 1; i >= 0; i--) {
+				world.removeBody(world.removeQueue[i]);
+				world.removeQueue.splice(i, 1);
+			}
 		}
 		lastTime = time;
 	};
@@ -79,10 +83,10 @@ function initPhysics() {
 	// V ta svet se nato dodajajo telesa (body) vsakega objekta.
 	world = new CANNON.World();
 	world.gravity.set(0, -10, 0); // gravitacija po Y
+	world.removeQueue = []; // telesa, ki naj bodo odstranjena, pushaj v ta queue
 
 	// Materiali določajo, kako posamezna telesa reagirajo med seboj
 	materials.frictionless = new CANNON.Material("frictionlessMaterial");
-	// TODO: potweakaj, da ne bo bounca
 	let mat_frictionless = new CANNON.ContactMaterial(materials.frictionless, materials.frictionless, {
 		friction: 0,
 		restitution: 0,
@@ -237,9 +241,9 @@ var initGame = function() {
 
 	initPhysics();
 
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-4, 0, 0], undefined, [0.1, 5, 2]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], [0, 0, 0], [5, 1, 3]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], [0, 0, 0], [3, 1, 1]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-4, 0, 0], [0, 0, 0], [0.1, 5, 2]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
 
 	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
@@ -301,6 +305,9 @@ var draw = function(object) {
 	let pos = object.body.position;
 	mat4.translate(transformMatrix, transformMatrix, [pos.x, pos.y, pos.z]);
 	mat4.scale(transformMatrix, transformMatrix, object.scale);
+	mat4.rotateX(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[0]));
+	mat4.rotateY(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[1]));
+	mat4.rotateZ(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[2]));
 	// TODO: implementiraj se rotacije ??? mogoce je potrebno drugace podati rotacije kot trenutno
 	//mat4.rotate(transformMatrix, ???);
 
@@ -352,19 +359,22 @@ function handleKeyDown(event) {
 function shootBullet() {
 	let pos = player.body.position;
 	let bSize = [0.2, 0.2, 0.2];
-	let b = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [pos.x, pos.y, pos.z], undefined, bSize);
+	let bRot = [45, 45, 0];
+	let bSpeed = 8;
+	let b = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [pos.x, pos.y, pos.z], bRot, bSize);
 	b.type = "bullet";
 	b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
 	// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
 	b.body.type = CANNON.Body.DYNAMIC;
 	b.body.updateMassProperties();
-	b.body.velocity.x = 10 * player.data.lookDirectionX;
+	b.body.velocity.x = bSpeed * player.data.lookDirectionX;
 
-	b.body.addEventListener("collide", function(event) {
+	var bulletCollisionEvent = function(event) {
 		if(event.body.parentObject.type == "bullet") {
 			//world.removeBody(event.body);
 			let envpos = environment.indexOf(event.body.parentObject);
 			if(envpos >= 0) {
+				world.removeQueue.push(event.body);
 				environment.splice(envpos, 1);
 			} else {
 				console.warn("Object not found in environment!");
@@ -372,12 +382,16 @@ function shootBullet() {
 		} else if(event.target.parentObject.type === "bullet") {
 			let envpos = environment.indexOf(event.target.parentObject);
 			if(envpos >= 0) {
+				event.target.removeEventListener("collide", bulletCollisionEvent);
+				world.removeQueue.push(event.target);
 				environment.splice(envpos, 1);
 			} else {
 				console.warn("Object not found in environment!");
 			}
 		}
-	});
+	};
+
+	b.body.addEventListener("collide", bulletCollisionEvent);
 }
 
 function handleKeyUp(event) {
