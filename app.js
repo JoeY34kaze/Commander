@@ -54,6 +54,9 @@ var onStart = function () {
 	var updatePhysics = function(time) {
 		if(lastTime !== undefined) {
 			var dt = (time - lastTime) / 1000;
+			if(player.data.shootCooldown > 0) {
+				player.data.shootCooldown -= dt;
+			}
 			world.step(fixedTimeStep, dt, maxSubSteps);
 		}
 		lastTime = time;
@@ -122,11 +125,6 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
 
-	// Objektu damo body za uporabo v physics world-u.
-	let body = createBody(position, scale, 0, materials.frictionless);
-	// Telo dodaj v physics world
-	world.addBody(body);
-
 	var object = {
 		program: shaderProgram,
 		indices: indices,
@@ -134,23 +132,36 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 		rotation: rotation,
 		angle: 0,
 		scale: scale,
-		body: body
+		body: undefined,
+		type: "",
+		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
+			// Objektu damo body za uporabo v physics world-u.
+			// Telo dodaj v physics world
+			let body = new CANNON.Body({
+				mass: mass, // privzeto brez mase (staticen objekt, neodziven na gravitacijo ali trke)
+				position: new CANNON.Vec3(position[0], position[1], position[2]), // pozicija
+				shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])), // privzeta oblike je kvader, navedemo njegovo velikost (xyz)
+				fixedRotation: true, // telo se ne rotira ob trku (oz. delovanju drugih sil)
+				material: material, // material telesa
+				collisionFilterGroup: colGroups, // skupine, v katerih se nahaja objekt (uporabi bitwise operacijo | za nastevanje)
+				collisionFilterMask: colGroupsMask, // It can only collide with group 2 and 3
+			});
+			this.body = body;
+			body.parentObject = this;
+			world.addBody(body);
+		}
 	};
 
 	environment.push(object);
 	return object;
 }
 
-function createBody(position, scale, mass = 0, material = undefined) {
-	let body = new CANNON.Body({
-		mass: mass, // privzeto brez mase (staticen objekt, neodziven na gravitacijo ali trke)
-		position: new CANNON.Vec3(position[0], position[1], position[2]), // pozicija
-		shape: new CANNON.Box(new CANNON.Vec3(scale[0], scale[1], scale[2])), // privzeta oblike je kvader, navedemo njegovo velikost (xyz)
-		fixedRotation: true, // telo se ne rotira ob trku (oz. delovanju drugih sil)
-		material: material, // material telesa
-	});
-	return body;
-}
+var collisionGroups = {
+	GROUND: 1,
+	OBJECT: 2,
+	BULLET: 4,
+	OTHER : 8,
+};
 
 var objectsVI = {
 	// X, Y, Z           R, G, B
@@ -226,15 +237,16 @@ var initGame = function() {
 
 	initPhysics();
 
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]);
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-4, 0, 0], undefined, [0.1, 5, 2]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+
 	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
-	
-	player.body.mass = 30;
-	player.body.type = CANNON.Body.DYNAMIC;
-	player.body.updateMassProperties();
+	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
 
 	player.data = {};
+	player.data.shootCooldown = 0;
+	player.data.lookDirectionX = +1;
 	player.data.speed = 3;
 	player.data.canJump = false;
 
@@ -302,8 +314,14 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 	// tipko drzimo ...
-	if (currentlyPressedKeys["ArrowLeft"]) { player.body.velocity.x = -player.data.speed }
-	if (currentlyPressedKeys["ArrowRight"]) { player.body.velocity.x = +player.data.speed }
+	if (currentlyPressedKeys["ArrowLeft"]) { 
+		player.body.velocity.x = -player.data.speed;
+		player.data.lookDirectionX = -1;
+	}
+	if (currentlyPressedKeys["ArrowRight"]) {
+		player.body.velocity.x = +player.data.speed;
+		player.data.lookDirectionX = +1;
+	}
 	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = -player.data.speed }
 	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = +player.data.speed }
 
@@ -313,19 +331,53 @@ function handleKeys() {
 	if (!currentlyPressedKeys["ArrowUp"] && !currentlyPressedKeys["ArrowDown"]) {
 		player.body.velocity.z = 0;
 	}
+
+	if(player.data.shootCooldown <= 0 && currentlyPressedKeys["KeyX"]) {
+		shootBullet();
+		player.data.shootCooldown = 0.5;
+	}
 }
 
 function handleKeyDown(event) {
 	// storing the pressed state for individual key
 	currentlyPressedKeys[event.code] = true;
 
-	console.log(CANNON.ObjectCollisionMatrix());
-
 	if (player.data.canJump && event.code == "Space") { 
 		// do jump
 		player.data.canJump = false;
 		player.body.velocity.y = 6;
 	}
+}
+
+function shootBullet() {
+	let pos = player.body.position;
+	let bSize = [0.2, 0.2, 0.2];
+	let b = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [pos.x, pos.y, pos.z], undefined, bSize);
+	b.type = "bullet";
+	b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
+	// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
+	b.body.type = CANNON.Body.DYNAMIC;
+	b.body.updateMassProperties();
+	b.body.velocity.x = 10 * player.data.lookDirectionX;
+
+	b.body.addEventListener("collide", function(event) {
+		if(event.body.parentObject.type == "bullet") {
+			//world.removeBody(event.body);
+			let envpos = environment.indexOf(event.body.parentObject);
+			if(envpos >= 0) {
+				environment.splice(envpos, 1);
+			} else {
+				console.warn("Object not found in environment!");
+			}
+		} else if(event.target.parentObject.type === "bullet") {
+			let envpos = environment.indexOf(event.target.parentObject);
+			if(envpos >= 0) {
+				environment.splice(envpos, 1);
+			} else {
+				console.warn("Object not found in environment!");
+			}
+		}
+	});
 }
 
 function handleKeyUp(event) {
