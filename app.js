@@ -101,7 +101,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
   
 	let boxIndexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(indices), gl.STATIC_DRAW);
 
 	let shaderProgram = createShaderProgram();
   
@@ -218,6 +218,26 @@ var objectsVI = {
 	]
 };
 
+
+
+
+
+var initObjFiles=function(){
+
+	var client = new XMLHttpRequest();
+	client.open('GET', './aKey.obj');
+	client.onreadystatechange = function() {
+		var mesh=new OBJ.Mesh(client.responseText);
+	  console.log(mesh.vertices);
+		OBJ.initMeshBuffers(gl,mesh);
+	  	createObject(mesh.vertices,mesh.indices,[0,2,0]);
+	}
+	client.send();
+
+	
+
+}
+
 var initGame = function() {
 	// init camera
 	camera = {
@@ -225,6 +245,7 @@ var initGame = function() {
 	};
 
 	initPhysics();
+	initObjFiles();
 
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]);
 	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]);
@@ -256,6 +277,7 @@ var initGame = function() {
 	});
 
 	console.log(environment);
+	
 }; 
 
 // izrise izbran objekt
