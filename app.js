@@ -206,7 +206,8 @@ function initPhysics() {
 }
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
-function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
+// prvi parameter {vertices, indices} naj bo objekt iz objectsVI (npr. objectsVI.box)
+function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -251,13 +252,11 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 }
 
 var initObjFiles = function() {
-	var objectsImport = [];
-
-	//ce dodas nov objekt moras
-	//dodati se v objectsVI s praznimi tabelami za vertices in indices
-	//in v initGame kreiras nov objekt
-	objectsImport.push('./banana.obj');
-	objectsImport.push('./key.obj');
+	var objectsImport = [
+		'./banana.obj',
+		'./key.obj',
+		'./teddy.obj',
+	];
 
 	let client;
 	let objForIm;
@@ -267,16 +266,17 @@ var initObjFiles = function() {
 		objForIm = objectsImport[k];
 		objName = objForIm.substring(2, objForIm.length - 4);
 
-		client.open('GET', objForIm,false);
+		client.open('GET', objForIm, false);
 		client.addEventListener("load", function() {
 			let mesh = new OBJ.Mesh(client.responseText);
+			mesh.vertices = fixVertices(mesh.vertices);
 			let vertices = [];
 			for(let i = 0; i < mesh.vertices.length; i += 3) {
 				for(let j = 0; j < 3; j++) {
 					vertices.push(mesh.vertices[i + j]);
 				}
 				for(let j = 0; j < 3; j++) {
-					vertices.push(0.5);
+					vertices.push(0.25);
 				}
 			}
 			objectsVI[objName] = {};
@@ -284,6 +284,32 @@ var initObjFiles = function() {
 			objectsVI[objName].indices = mesh.indices;
 		});
 		client.send();
+	}
+
+	// createObject(...) funkcija pricakuje vertice na obmocju (-1, 1). Ta funckija podane vertice
+	// popravi (t.j. resizea objekt, da pase v obmocje (-1, 1) )
+	function fixVertices(vertices) {
+		// poiscemo najmanjso vertico in najvecjo vertico
+		let min = vertices[0];
+		let max = vertices[0];
+		for(let i = 0; i < vertices.length; i++) {
+			if(vertices[i] < min) min = vertices[i];
+			if(vertices[i] > max) max = vertices[i];
+		}
+		// ce je minimalna vertica negativna, vse vertice premaknemo v plus,
+		// ce pa je pozitivna, vse vertice premaknemo blizje 0
+		// (premaknemo objekt v ++ kvadrant koordinatnega sistema)
+		for(let i = 0; i < vertices.length; i++) {
+			vertices[i] += -min;
+		}
+		max += -min;
+		
+		// vse vertice delimo z max/2, da zmanjsamo predmet na (0, 2) in odstejemo -1, da predmet premaknemo
+		// na (-1, 1) - to kar smo hoteli. Te nove vertice lahko zdaj vrnemo.
+		for(let i = 0; i < vertices.length; i++) {
+			vertices[i] = (vertices[i] / (max / 2)) - 1;
+		}
+		return vertices;
 	}
 };
 
@@ -296,8 +322,9 @@ var initGame = function() {
 	initPhysics();
 	initObjFiles();
 
-	createObject(objectsVI.key.vertices, objectsVI.key.indices, [4, 0, 0], undefined, [0.1, 0.1, 0.1]).giveBody();
-	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
+	createObject(objectsVI.key, [4, 0, 0], [0, 0, 45], [1, 1, 1]).giveBody();
+	createObject(objectsVI.banana, [1.5, -0.5, 0], [0, 0, 0], [1, 1, 1]).giveBody();
+	createObject(objectsVI.teddy, [10, 1, 0], [0, 0, 0], [0.75, 0.75, 0.75]).giveBody();
 
 	// PRIPRAVA LEVELA
 
@@ -334,7 +361,7 @@ var initGame = function() {
 	];
 
 	for(let i = 0; i < platforms.length; i++) {
-		createObject(objectsVI.box.vertices, objectsVI.box.indices, platforms[i].position, platforms[i].rotation, platforms[i].scale)
+		createObject(objectsVI.box, platforms[i].position, platforms[i].rotation, platforms[i].scale)
 			.giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
 	}
 
@@ -344,7 +371,7 @@ var initGame = function() {
 
 function initPlayer() {
 	let startPosition = [0,0,0];
-	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, startPosition, undefined, [0.5, 1, 0.4]);
+	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4]);
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
 
 	player.data = {};
@@ -362,7 +389,7 @@ function initPlayer() {
 			let bSize = [0.2, 0.2, 0.2];
 			let bRot = [45, 45, 0];
 			let bSpeed = 14;
-			let b = createObject(objectsVI.box.vertices, objectsVI.box.indices, [pos.x, pos.y, pos.z], bRot, bSize);
+			let b = createObject(objectsVI.box, [pos.x, pos.y, pos.z], bRot, bSize);
 			b.type = "bullet";
 			b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
 			// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
