@@ -7,6 +7,9 @@ var fragmentShader;
 var camera;
 var player;
 
+var timeNode;//hud
+var scoreNode;//hud
+
 var environment = []; //not se loh doda z global.environment.push(obj);
 
 var onStart = function () {
@@ -21,15 +24,23 @@ var onStart = function () {
 	initShaders();
 
 	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.
-
+	initHUD();
 	// inicializacija keyboard listenerjev
 	document.onkeydown = handleKeyDown;
 	document.onkeyup = handleKeyUp;
+	
+
+	
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function (time) { //loop ki transformira vse objekte in jih izrise
 
 		updatePhysics(time);
+
+		//hud
+
+		scoreNode.nodeValue = player.body.position.x;  
+		timeNode.nodeValue = "2"; 
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -58,6 +69,8 @@ var onStart = function () {
 		}
 		lastTime = time;
 	};
+	
+  
 
 
 
@@ -70,6 +83,21 @@ var gameplay = function() {//do stuff
 
 var world;
 var materials = {};
+
+function initHUD(){
+	// look up the elements we want to affect
+var timeElement = document.getElementById("time");
+var scoreElement = document.getElementById("score");
+ 
+// Create text nodes to save some time for the browser.
+timeNode = document.createTextNode("");
+scoreNode = document.createTextNode("");
+ 
+// Add those text nodes where they need to go
+timeElement.appendChild(timeNode);
+scoreElement.appendChild(scoreNode);
+
+}
 
 function initPhysics() {
 	// Ustvari "svet", v katerem deluje gravitacija in collision detection.
