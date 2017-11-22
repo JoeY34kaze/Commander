@@ -1,6 +1,6 @@
 # Blender v2.79 (sub 0) OBJ File: 'kljuc_2blend.blend'
 # www.blender.org
-mtllib aKey.mtl
+mtllib key.mtl
 o Torus
 v 1.776544 0.423204 -0.876573
 v 1.198794 1.214084 -1.006177

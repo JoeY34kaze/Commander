@@ -105,24 +105,6 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 
 	let shaderProgram = createShaderProgram();
 
-	/*let positionAttribLocation = gl.getAttribLocation(shaderProgram, 'vertPosition');
-	let colorAttribLocation = gl.getAttribLocation(shaderProgram, 'vertColor');
-
-	// gl.vertexAttribPointer(
-	//   Attribute location,
-	//   Number of elements per attribute,
-	//   Type of elements,
-	//   ,
-	//   Size of an individual vertex,
-	//   Offset from the beginning of a single vertex to this attribute
-	// );
-	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-	gl.vertexAttribPointer(colorAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
-
-	gl.enableVertexAttribArray(positionAttribLocation);
-	gl.enableVertexAttribArray(colorAttribLocation);
-	*/
-
 	// Objektu damo body za uporabo v physics world-u.
 	let body = createBody(position, scale, 0, materials.frictionless);
 	// Telo dodaj v physics world
@@ -156,99 +138,117 @@ function createBody(position, scale, mass = 0, material = undefined) {
 }
 
 var objectsVI = {
-	// X, Y, Z           R, G, B
-	boxVertices: [
-		// Top
-		-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
-		-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
-		1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
-		1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
+	box: {
+		// X, Y, Z           R, G, B
+		vertices: [
+			// Top
+			-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
+			-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
+			1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
+			1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
 
-		// Left
-		-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-		-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-		-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-		-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+			// Left
+			-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+			-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+			-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+			-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
 
-		// Right
-		1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-		1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-		1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-		1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+			// Right
+			1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+			1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+			1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+			1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
 
-		// Front
-		1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
-		1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
-		-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
-		-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
+			// Front
+			1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
+			1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
+			-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
+			-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
 
-		// Back
-		1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
-		1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
-		-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
-		-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
+			// Back
+			1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
+			1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
+			-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
+			-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
 
-		// Bottom
-		-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
-		-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
-		1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
-		1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
-	],
-	boxIndices: [
-		// Top
-		0, 1, 2,
-		0, 2, 3,
+			// Bottom
+			-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
+			-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
+			1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
+			1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
+		],
+		indices: [
+			// Top
+			0, 1, 2,
+			0, 2, 3,
 
-		// Left
-		5, 4, 6,
-		6, 4, 7,
+			// Left
+			5, 4, 6,
+			6, 4, 7,
 
-		// Right
-		8, 9, 10,
-		8, 10, 11,
+			// Right
+			8, 9, 10,
+			8, 10, 11,
 
-		// Front
-		13, 12, 14,
-		15, 14, 12,
+			// Front
+			13, 12, 14,
+			15, 14, 12,
 
-		// Back
-		16, 17, 18,
-		16, 18, 19,
+			// Back
+			16, 17, 18,
+			16, 18, 19,
 
-		// Bottom
-		21, 20, 22,
-		22, 20, 23
-	]
+			// Bottom
+			21, 20, 22,
+			22, 20, 23
+		]
+	},
+	key: {
+		vertices: [],
+		indices: []
+	},
+	banana:{
+		vertices: [],
+		indices: []
+	}
+
 };
 
-
-
-
-
 var initObjFiles=function(){
+	var objectsImport = [];
 
-	var client = new XMLHttpRequest();
-	client.open('GET', './aKey.obj');
-	client.onreadystatechange = function() {
-		var mesh=new OBJ.Mesh(client.responseText);
-		var vertices=new Array();
-		for(var i=0; i<mesh.vertices.length; i+=3){
-			for(var j=0; j<3; j++){
-				vertices.push(mesh.vertices[i+j]);
-			}
-			for(var j=0; j<3; j++){
-				vertices.push(0.5);
-			}
+	//ce dodas nov objekt moras
+	//dodati se v objectsVI s praznimi tabelami za vertices in indices
+	//in v initGame kreiras nov objekt
+	objectsImport.push('./banana.obj');
+	objectsImport.push('./key.obj');
 
+	var client;
+	var objForIm;
+	var objName;
+	for(var k=0; k<objectsImport.length; k++){
+		client = new XMLHttpRequest();
+		objForIm = objectsImport[k];
+		objName = objForIm.substring(2, objForIm.length-4);
+
+		client.open('GET', objForIm,false);
+		client.onreadystatechange = function() {
+			var mesh=new OBJ.Mesh(client.responseText);
+			var vertices=[];
+			for(var i=0; i<mesh.vertices.length; i+=3){
+				for(var j=0; j<3; j++){
+					vertices.push(mesh.vertices[i+j]);
+				}
+				for(var j=0; j<3; j++){
+					vertices.push(0.5);
+				}
+
+			}
+			objectsVI[objName].vertices = vertices;
+			objectsVI[objName].indices = mesh.indices;
 		}
-		//console.log(vertices);
-		//console.log(mesh.indices);
-		createObject(vertices,mesh.indices,[0,2,0]);
+		client.send();
 	}
-	client.send();
-
-
-
 }
 
 var initGame = function() {
@@ -260,9 +260,11 @@ var initGame = function() {
 	initPhysics();
 	initObjFiles();
 
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [0, -3, 0], undefined, [5, 1, 3]);
-	createObject(objectsVI.boxVertices, objectsVI.boxIndices, [3, -2, 0], undefined, [3, 1, 1]);
-	player = createObject(objectsVI.boxVertices, objectsVI.boxIndices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
+	createObject(objectsVI.key.vertices, objectsVI.key.indices, [4, 0, 0], undefined, [0.1, 0.1, 0.1]);
+	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]);
+	createObject(objectsVI.box.vertices, objectsVI.box.indices, [0, -3, 0], undefined, [5, 1, 3]);
+	createObject(objectsVI.box.vertices, objectsVI.box.indices, [3, -2, 0], undefined, [3, 1, 1]);
+	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
 
 	player.body.mass = 30;
 	player.body.type = CANNON.Body.DYNAMIC;
