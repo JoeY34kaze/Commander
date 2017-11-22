@@ -203,18 +203,9 @@ var objectsVI = {
 			22, 20, 23
 		]
 	},
-	key: {
-		vertices: [],
-		indices: []
-	},
-	banana:{
-		vertices: [],
-		indices: []
-	}
-
 };
 
-var initObjFiles=function(){
+var initObjFiles = function() {
 	var objectsImport = [];
 
 	//ce dodas nov objekt moras
@@ -223,33 +214,33 @@ var initObjFiles=function(){
 	objectsImport.push('./banana.obj');
 	objectsImport.push('./key.obj');
 
-	var client;
-	var objForIm;
-	var objName;
-	for(var k=0; k<objectsImport.length; k++){
+	let client;
+	let objForIm;
+	let objName;
+	for(let k = 0; k < objectsImport.length; k++) {
 		client = new XMLHttpRequest();
 		objForIm = objectsImport[k];
-		objName = objForIm.substring(2, objForIm.length-4);
+		objName = objForIm.substring(2, objForIm.length - 4);
 
 		client.open('GET', objForIm,false);
-		client.onreadystatechange = function() {
-			var mesh=new OBJ.Mesh(client.responseText);
-			var vertices=[];
-			for(var i=0; i<mesh.vertices.length; i+=3){
-				for(var j=0; j<3; j++){
-					vertices.push(mesh.vertices[i+j]);
+		client.addEventListener("load", function() {
+			let mesh = new OBJ.Mesh(client.responseText);
+			let vertices = [];
+			for(let i = 0; i < mesh.vertices.length; i += 3) {
+				for(let j = 0; j < 3; j++) {
+					vertices.push(mesh.vertices[i + j]);
 				}
-				for(var j=0; j<3; j++){
+				for(let j = 0; j < 3; j++) {
 					vertices.push(0.5);
 				}
-
 			}
+			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
-		}
+		});
 		client.send();
 	}
-}
+};
 
 var initGame = function() {
 	// init camera
