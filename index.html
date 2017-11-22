@@ -17,6 +17,12 @@
 				  font-family: monospace;
 				  padding: 1em;
 			  }
+
+			progress {background-color: green !important;}
+
+			progress::-moz-progress-bar {background-color: green !important;}
+
+			progress::-webkit-progress-value {background-color: green !important;}
 			</style>
 
 		<!-- Fragment shader -->
@@ -57,6 +63,7 @@
 			<div id="overlay">
 					<div>Time left: <span id="time"></span></div>
 					<div>Score : <span id="score"></span></div>
+					<progress id="health" value="80" max="100"></progress>
 				</div>
 	</div>
 		<br />

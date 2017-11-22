@@ -41,6 +41,8 @@ var onStart = function () {
 
 		scoreNode.nodeValue = player.body.position.x;  
 		timeNode.nodeValue = "2"; 
+		//let health = document.getElementById("health")
+		//health.value = blabla; - health naj porihta funkcija ob koliziji z sovragom
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
