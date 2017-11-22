@@ -170,19 +170,18 @@ var gameplay = function() {//do stuff
 };
 
 
-function initHUD(){
+function initHUD() {
 	// look up the elements we want to affect
-var timeElement = document.getElementById("time");
-var scoreElement = document.getElementById("score");
- 
-// Create text nodes to save some time for the browser.
-timeNode = document.createTextNode("");
-scoreNode = document.createTextNode("");
- 
-// Add those text nodes where they need to go
-timeElement.appendChild(timeNode);
-scoreElement.appendChild(scoreNode);
+	let timeElement = document.getElementById("time");
+	let scoreElement = document.getElementById("score");
 
+	// Create text nodes to save some time for the browser.
+	timeNode = document.createTextNode("");
+	scoreNode = document.createTextNode("");
+	
+	// Add those text nodes where they need to go
+	timeElement.appendChild(timeNode);
+	scoreElement.appendChild(scoreNode);
 }
 
 function initPhysics() {
@@ -224,7 +223,6 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 		indices: indices,
 		//position: position, // !! use body.position !!
 		rotation: rotation,
-		angle: 0,
 		scale: scale,
 		body: undefined,
 		type: "",
@@ -431,9 +429,9 @@ var draw = function(object) {
 	let projMatrix = new Float32Array(16);
 
 	mat4.identity(worldMatrix);
-	var cam=player.body.position;
-	cam=[cam.x+camera.position[0],cam.y+camera.position[1],cam.z+camera.position[2]];//tukej se naredi mal offseta
-	mat4.lookAt(viewMatrix, cam, [player.body.position.x,player.body.position.y+1,player.body.position.z], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
+	let cam = player.body.position;
+	cam = [cam.x + camera.position[0],cam.y + camera.position[1],cam.z + camera.position[2]];//tukej se naredi mal offseta
+	mat4.lookAt(viewMatrix, cam, [player.body.position.x,player.body.position.y + 1,player.body.position.z], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
