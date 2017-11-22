@@ -361,8 +361,18 @@ function handleKeys() {
 		player.body.velocity.x = +player.data.speed;
 		player.data.lookDirectionX = +1;
 	}
-	if (currentlyPressedKeys["ArrowUp"]) { player.body.velocity.z = -player.data.speed }
-	if (currentlyPressedKeys["ArrowDown"]) { player.body.velocity.z = +player.data.speed }
+	if (currentlyPressedKeys["ArrowUp"]) { 
+		if(player.body.position.z > -2)
+			player.body.velocity.z = -player.data.speed;
+		else
+			player.body.velocity.z = 0;
+	}
+	if (currentlyPressedKeys["ArrowDown"]) {
+		if(player.body.position.z < 2)
+			player.body.velocity.z = +player.data.speed;
+		else
+			player.body.velocity.z = 0;
+	}
 
 	if (!currentlyPressedKeys["ArrowLeft"] && !currentlyPressedKeys["ArrowRight"]) {
 		player.body.velocity.x = 0;
