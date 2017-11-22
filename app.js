@@ -105,7 +105,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 
 	let shaderProgram = createShaderProgram();
 
-	let positionAttribLocation = gl.getAttribLocation(shaderProgram, 'vertPosition');
+	/*let positionAttribLocation = gl.getAttribLocation(shaderProgram, 'vertPosition');
 	let colorAttribLocation = gl.getAttribLocation(shaderProgram, 'vertColor');
 
 	// gl.vertexAttribPointer(
@@ -121,6 +121,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(colorAttribLocation);
+	*/
 
 	// Objektu damo body za uporabo v physics world-u.
 	let body = createBody(position, scale, 0, materials.frictionless);
@@ -134,7 +135,9 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 		rotation: rotation,
 		angle: 0,
 		scale: scale,
-		body: body
+		body: body,
+		vertexBuffer: boxVertexBufferObject,
+		indexBuffer: boxIndexBufferObject
 	};
 
 	environment.push(object);
@@ -225,7 +228,7 @@ var objectsVI = {
 var initObjFiles=function(){
 
 	var client = new XMLHttpRequest();
-	client.open('GET', './banana.obj');
+	client.open('GET', './aKey.obj');
 	client.onreadystatechange = function() {
 		var mesh=new OBJ.Mesh(client.responseText);
 		var vertices=new Array();
@@ -325,6 +328,26 @@ var draw = function(object) {
 	//mat4.rotate(transformMatrix, ???);
 
 	mat4.mul(worldMatrix, worldMatrix, transformMatrix);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
+
+	let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
+	let colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
+
+	// gl.vertexAttribPointer(
+	//   Attribute location,
+	//   Number of elements per attribute,
+	//   Type of elements,
+	//   ,
+	//   Size of an individual vertex,
+	//   Offset from the beginning of a single vertex to this attribute
+	// );
+	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
+	gl.vertexAttribPointer(colorAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+
+	gl.enableVertexAttribArray(positionAttribLocation);
+	gl.enableVertexAttribArray(colorAttribLocation);
 
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);
