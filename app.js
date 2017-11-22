@@ -1,16 +1,99 @@
+// webgl
 var canvas;
 var gl;
 
 var vertexShader;
 var fragmentShader;
 
+// game elements
 var camera;
 var player;
-
-var timeNode;//hud
-var scoreNode;//hud
-
 var environment = []; //not se loh doda z global.environment.push(obj);
+
+// hud
+var timeNode;
+var scoreNode;
+
+// physics
+var world;
+var materials = {};
+var collisionGroups = {
+	GROUND: 1,
+	OBJECT: 2,
+	BULLET: 4,
+	OTHER : 8,
+};
+
+// objekti
+var objectsVI = {
+	box: {
+		// X, Y, Z           R, G, B
+		vertices: [
+			// Top
+			-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
+			-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
+			1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
+			1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
+
+			// Left
+			-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+			-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+			-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+			-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+
+			// Right
+			1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
+			1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
+			1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
+			1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+
+			// Front
+			1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
+			1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
+			-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
+			-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
+
+			// Back
+			1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
+			1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
+			-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
+			-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
+
+			// Bottom
+			-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
+			-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
+			1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
+			1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
+		],
+		indices: [
+			// Top
+			0, 1, 2,
+			0, 2, 3,
+
+			// Left
+			5, 4, 6,
+			6, 4, 7,
+
+			// Right
+			8, 9, 10,
+			8, 10, 11,
+
+			// Front
+			13, 12, 14,
+			15, 14, 12,
+
+			// Back
+			16, 17, 18,
+			16, 18, 19,
+
+			// Bottom
+			21, 20, 22,
+			22, 20, 23
+		]
+	},
+};
+
+
 
 var onStart = function () {
 
@@ -74,20 +157,18 @@ var onStart = function () {
 		}
 		lastTime = time;
 	};
-	
-  
-
-
 
 	requestAnimationFrame(update);
 };
 
 var gameplay = function() {//do stuff
 	handleKeys();
+
+	if(player.body.position.y < -10) {
+		player.actions.kill();
+	}
 };
 
-var world;
-var materials = {};
 
 function initHUD(){
 	// look up the elements we want to affect
@@ -171,81 +252,6 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 	return object;
 }
 
-var collisionGroups = {
-	GROUND: 1,
-	OBJECT: 2,
-	BULLET: 4,
-	OTHER : 8,
-};
-
-var objectsVI = {
-	box: {
-		// X, Y, Z           R, G, B
-		vertices: [
-			// Top
-			-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
-			-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
-			1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
-			1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
-
-			// Left
-			-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-			-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-			-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-			-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
-
-			// Right
-			1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-			1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-			1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-			1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
-
-			// Front
-			1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
-			1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
-			-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
-			-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
-
-			// Back
-			1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
-			1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
-			-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
-			-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
-
-			// Bottom
-			-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
-			-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
-			1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
-			1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
-		],
-		indices: [
-			// Top
-			0, 1, 2,
-			0, 2, 3,
-
-			// Left
-			5, 4, 6,
-			6, 4, 7,
-
-			// Right
-			8, 9, 10,
-			8, 10, 11,
-
-			// Front
-			13, 12, 14,
-			15, 14, 12,
-
-			// Back
-			16, 17, 18,
-			16, 18, 19,
-
-			// Bottom
-			21, 20, 22,
-			22, 20, 23
-		]
-	},
-};
-
 var initObjFiles = function() {
 	var objectsImport = [];
 
@@ -295,18 +301,102 @@ var initGame = function() {
 	createObject(objectsVI.key.vertices, objectsVI.key.indices, [4, 0, 0], undefined, [0.1, 0.1, 0.1]).giveBody();
 	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
 
-	createObject(objectsVI.box.vertices, objectsVI.box.indices, [0, -3, 0], [0, 0, 0], [5, 1, 3]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.box.vertices, objectsVI.box.indices, [3, -2, 0], [0, 0, 0], [3, 1, 1]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.box.vertices, objectsVI.box.indices, [-4, 0, 0], [0, 0, 0], [0.1, 5, 2]).giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	// PRIPRAVA LEVELA
 
-	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, [-2, -0.5, 0], undefined, [0.5, 1, 0.4]);
+	function createPlatform(name, position, rotation, scale) {
+		return {
+			name: name, // za lastno referenco
+			position: position,
+			rotation: rotation,
+			scale: scale
+		};
+	}
+	let platforms = [
+		createPlatform("zacetek", [0, -3, 0], [0, 0, 0], [5, 1, 3]),
+		createPlatform("zadnja stena", [-4, 0, 0], [0, 0, 0], [0.2, 4, 2]),
+		createPlatform("prva rampa", [7, -2, 0], [0, 0, 0], [5, 1, 1]),
+		createPlatform("tla za rampo", [13, -3, 0], [0, 0, 0], [3, 1, 3]),
+		createPlatform("tla za rampo, ozka", [16, -3, 0], [0, 0, 0], [4, 1, 1.5]),
+		createPlatform("tla, skupna s stopnicami", [30, -3, 0], [0, 0, 0], [8, 1, 3]),
+		createPlatform("stopnice: 1", [28, -2, -1.5], [0, 0, 0], [2, 1.5, 1.5]),
+		createPlatform("stopnice: 2", [32, -1, -1.5], [0, 0, 0], [2, 2, 1.5]),
+		createPlatform("stopnice: 3", [36, 0, -1.5], [0, 0, 0], [2, 2.5, 1.5]),
+		createPlatform("tla naprej od stopnic (spodaj)", [41, -3, 1.5], [0, 0, 0], [3, 1, 1.5]),
+		createPlatform("platforma naprej od stopnic", [41, 2, -1.5], [0, 0, 0], [3, 0.5, 1.5]),
+		createPlatform("naprej od stopnic", [48, -3, 0], [0, 0, 0], [4, 1, 3]),
+		createPlatform("tla poleg podtal", [58.25, -5, -2], [0, 0, 0], [6.25, 3, 1]),
+		createPlatform("tla nad podtlemi", [55, -2.5, 1], [0, 0, 0], [3, 0.5, 2]),
+		createPlatform("podtla tla", [57, -8, 1], [0, 0, 0], [5, 0.5, 2]),
+		createPlatform("podtla stena na levi", [51, -6, 0], [0, 0, 0], [1, 2.5, 3]),
+		createPlatform("podtla desno stopnice: 1", [62, -7.25, 1], [0, 0, 0], [0.5, 1.25, 2]),
+		createPlatform("podtla desno stopnice: 2", [63, -6.5, 1], [0, 0, 0], [0.5, 2, 2]),
+		createPlatform("podtla desno stopnice: 3", [64, -5.75, 1], [0, 0, 0], [0.5, 2.75, 2]),
+		createPlatform("rampa naprej od stopnic", [71, -3, 0], [0, 0, 0], [3, 1, 1]),
+		createPlatform("tla naprej od rampe (konec?)", [76, -3.5, 0], [0, 0, 0], [4, 1, 3]),
+	];
+
+	for(let i = 0; i < platforms.length; i++) {
+		createObject(objectsVI.box.vertices, objectsVI.box.indices, platforms[i].position, platforms[i].rotation, platforms[i].scale)
+			.giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	}
+
+	initPlayer();
+	console.log(environment);
+};
+
+function initPlayer() {
+	let startPosition = [0,0,0];
+	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, startPosition, undefined, [0.5, 1, 0.4]);
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
 
 	player.data = {};
 	player.data.shootCooldown = 0;
 	player.data.lookDirectionX = +1;
-	player.data.speed = 3;
+	player.data.speed = 4;
 	player.data.canJump = false;
+
+	player.actions = {
+		kill: function() {
+			player.body.position = new CANNON.Vec3(0, 0, 0);
+		},
+		shoot: function() {
+			let pos = player.body.position;
+			let bSize = [0.2, 0.2, 0.2];
+			let bRot = [45, 45, 0];
+			let bSpeed = 14;
+			let b = createObject(objectsVI.box.vertices, objectsVI.box.indices, [pos.x, pos.y, pos.z], bRot, bSize);
+			b.type = "bullet";
+			b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
+			// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
+			b.body.type = CANNON.Body.DYNAMIC;
+			b.body.updateMassProperties();
+			b.body.velocity.x = bSpeed * player.data.lookDirectionX;
+
+			var bulletCollisionEvent = function(event) {
+				if(event.body.parentObject.type == "bullet") {
+					//world.removeBody(event.body);
+					let envpos = environment.indexOf(event.body.parentObject);
+					if(envpos >= 0) {
+						world.removeQueue.push(event.body);
+						environment.splice(envpos, 1);
+					} else {
+						console.warn("Object not found in environment!");
+					}
+				} else if(event.target.parentObject.type === "bullet") {
+					let envpos = environment.indexOf(event.target.parentObject);
+					if(envpos >= 0) {
+						event.target.removeEventListener("collide", bulletCollisionEvent);
+						world.removeQueue.push(event.target);
+						environment.splice(envpos, 1);
+					} else {
+						console.warn("Object not found in environment!");
+					}
+				}
+			};
+
+			b.body.addEventListener("collide", bulletCollisionEvent);
+		},
+	};
 
 	var contactNormal = new CANNON.Vec3();
 	var upAxis = new CANNON.Vec3(0,1,0);
@@ -324,10 +414,7 @@ var initGame = function() {
 		if(contactNormal.dot(upAxis) > 0.5) // Use a "good" threshold value between 0 and 1 here!
 		player.data.canJump = true;
 	});
-
-	console.log(environment);
-
-};
+}
 
 // izrise izbran objekt
 var draw = function(object) {
@@ -354,8 +441,7 @@ var draw = function(object) {
 	gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
 	gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
 
-	//------------------------------------TRANSFORMACIJE--------------------------------------------------
-	//tipicno je TRS - translacija, rotacija, skaliranje
+	// TRANSFORMACIJE
 	let transformMatrix = new Float32Array(16);
 	mat4.identity(transformMatrix);
 
@@ -365,9 +451,7 @@ var draw = function(object) {
 	mat4.rotateX(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[0]));
 	mat4.rotateY(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[1]));
 	mat4.rotateZ(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[2]));
-	// TODO: implementiraj se rotacije ??? mogoce je potrebno drugace podati rotacije kot trenutno
-	//mat4.rotate(transformMatrix, ???);
-
+	
 	mat4.mul(worldMatrix, worldMatrix, transformMatrix);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
@@ -427,7 +511,7 @@ function handleKeys() {
 	}
 
 	if(player.data.shootCooldown <= 0 && currentlyPressedKeys["KeyX"]) {
-		shootBullet();
+		player.actions.shoot();
 		player.data.shootCooldown = 0.5;
 	}
 }
@@ -441,44 +525,6 @@ function handleKeyDown(event) {
 		player.data.canJump = false;
 		player.body.velocity.y = 6;
 	}
-}
-
-function shootBullet() {
-	let pos = player.body.position;
-	let bSize = [0.2, 0.2, 0.2];
-	let bRot = [45, 45, 0];
-	let bSpeed = 8;
-	let b = createObject(objectsVI.box.vertices, objectsVI.box.indices, [pos.x, pos.y, pos.z], bRot, bSize);
-	b.type = "bullet";
-	b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
-	// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
-	b.body.type = CANNON.Body.DYNAMIC;
-	b.body.updateMassProperties();
-	b.body.velocity.x = bSpeed * player.data.lookDirectionX;
-
-	var bulletCollisionEvent = function(event) {
-		if(event.body.parentObject.type == "bullet") {
-			//world.removeBody(event.body);
-			let envpos = environment.indexOf(event.body.parentObject);
-			if(envpos >= 0) {
-				world.removeQueue.push(event.body);
-				environment.splice(envpos, 1);
-			} else {
-				console.warn("Object not found in environment!");
-			}
-		} else if(event.target.parentObject.type === "bullet") {
-			let envpos = environment.indexOf(event.target.parentObject);
-			if(envpos >= 0) {
-				event.target.removeEventListener("collide", bulletCollisionEvent);
-				world.removeQueue.push(event.target);
-				environment.splice(envpos, 1);
-			} else {
-				console.warn("Object not found in environment!");
-			}
-		}
-	};
-
-	b.body.addEventListener("collide", bulletCollisionEvent);
 }
 
 function handleKeyUp(event) {
