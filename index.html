@@ -1,6 +1,29 @@
 <html>
 	<head>
 		<title>Commander</title>
+		<style>
+			body {
+				margin: 0;
+			  }
+			  .container {
+				  position: relative;
+			  }
+			  #overlay {
+				  position: absolute;
+				  left: 10px;
+				  top: 10px;
+				  background-color: rgba(0, 0, 0, 0.7);
+				  color: white;
+				  font-family: monospace;
+				  padding: 1em;
+			  }
+
+			progress {background-color: green !important;}
+
+			progress::-moz-progress-bar {background-color: green !important;}
+
+			progress::-webkit-progress-value {background-color: green !important;}
+			</style>
 
 		<!-- Fragment shader -->
 	    <script id="shader-fs" type="x-shader/x-fragment">
@@ -33,9 +56,16 @@
 	    </script>
 	</head>
 	<body onload="onStart();">
-		<canvas id="game-surface" width="800" height="600">
-			Your browser does not support HTML5
-		</canvas>
+		<div class="container">
+			<canvas id="game-surface" width="800" height="600">
+				Your browser does not support HTML5
+			</canvas>
+			<div id="overlay">
+					<div>Time left: <span id="time"></span></div>
+					<div>Score : <span id="score"></span></div>
+					<progress id="health" value="80" max="100"></progress>
+				</div>
+	</div>
 		<br />
 		<script src="cannon.js"></script>
 		<script src="gl-matrix.js"></script>

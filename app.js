@@ -7,6 +7,9 @@ var fragmentShader;
 var camera;
 var player;
 
+var timeNode;//hud
+var scoreNode;//hud
+
 var environment = []; //not se loh doda z global.environment.push(obj);
 
 var onStart = function () {
@@ -21,15 +24,25 @@ var onStart = function () {
 	initShaders();
 
 	initGame(); // tle naj se zgodi vsa inicializacija objektov, karkoli se bo dlje časa rabilo met.
-
+	initHUD();
 	// inicializacija keyboard listenerjev
 	document.onkeydown = handleKeyDown;
 	document.onkeyup = handleKeyUp;
+	
+
+	
 	
 	//one loop to rule them all, one loop to draw them, one loop to transform them all and in the renderer bind them
 	var update = function (time) { //loop ki transformira vse objekte in jih izrise
 
 		updatePhysics(time);
+
+		//hud
+
+		scoreNode.nodeValue = player.body.position.x;  
+		timeNode.nodeValue = "2"; 
+		//let health = document.getElementById("health")
+		//health.value = blabla; - health naj porihta funkcija ob koliziji z sovragom
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		gl.clearColor(0.75, 0.85, 0.8, 1.0);
@@ -65,6 +78,8 @@ var onStart = function () {
 		}
 		lastTime = time;
 	};
+	
+  
 
 
 
@@ -77,6 +92,21 @@ var gameplay = function() {//do stuff
 
 var world;
 var materials = {};
+
+function initHUD(){
+	// look up the elements we want to affect
+var timeElement = document.getElementById("time");
+var scoreElement = document.getElementById("score");
+ 
+// Create text nodes to save some time for the browser.
+timeNode = document.createTextNode("");
+scoreNode = document.createTextNode("");
+ 
+// Add those text nodes where they need to go
+timeElement.appendChild(timeNode);
+scoreElement.appendChild(scoreNode);
+
+}
 
 function initPhysics() {
 	// Ustvari "svet", v katerem deluje gravitacija in collision detection.
@@ -236,7 +266,7 @@ var objectsVI = {
 var initGame = function() {
 	// init camera
 	camera = {
-		position:[0, 0, 10]
+		position:[-4, 3, 15]
 	};
 
 	initPhysics();
@@ -289,7 +319,9 @@ var draw = function(object) {
 	let projMatrix = new Float32Array(16);
 
 	mat4.identity(worldMatrix);
-	mat4.lookAt(viewMatrix, camera.position, [0,0,0], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
+	var cam=player.body.position;
+	cam=[cam.x+camera.position[0],cam.y+camera.position[1],cam.z+camera.position[2]];//tukej se naredi mal offseta
+	mat4.lookAt(viewMatrix, cam, [player.body.position.x,player.body.position.y+1,player.body.position.z], [0, 1, 0]); //camera (pozicija kamere, kam gleda , vektor ki kaze gor)
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
