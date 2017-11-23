@@ -543,7 +543,7 @@ function loadBananas() {
 	];
 
 	for(let i = 0; i < bananaPositions.length; i++) {
-		let b = createObject(objectsVI.banana, bananaPositions[i], [0, Math.random() * 180, 30], [1, 1, 1], "pickup");
+		let b = createObject(objectsVI.banana, bananaPositions[i], [0, Math.random() * 180, 30], [1, 1, 1], "pickup", document.getElementById("texture_key"));
 		b.giveBody();
 		bananas.push(b);
 	}
