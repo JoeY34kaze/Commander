@@ -2,8 +2,6 @@
 var canvas;
 var gl;
 
-var iii=0;
-
 var vertexShader;
 var fragmentShader;
 
@@ -12,6 +10,7 @@ var camera;
 var player;
 var key;
 var door;
+var bananas = [];
 var environment = []; //not se loh doda z global.environment.push(obj);
 
 // hud
@@ -122,7 +121,7 @@ var onStart = function () {
 
 		//hud
 
-		scoreNode.nodeValue = player.body.position.x;  
+		scoreNode.nodeValue = player.data.score;
 		timeNode.nodeValue = "2"; 
 		//let health = document.getElementById("health")
 		//health.value = blabla; - health naj porihta funkcija ob koliziji z sovragom
@@ -172,15 +171,15 @@ var gameplay = function() {//do stuff
 		player.actions.kill();
 	}
 	if(player.hasKey == false) {
-		let distance = (player.body.position.x - key.position[0]) * (player.body.position.x - key.position[0]) + (player.body.position.y - key.position[1]) * (player.body.position.y - key.position[1]) + (player.body.position.z - key.position[2]) * (player.body.position.z - key.position[2]);
+		let distance = distanceBetween(player, key);
 		if(distance < 1) {
 			player.hasKey = true;
 			console.log("plyer je dobil kljuc.");
 			world.removeQueue.push(getObjectfromEnv("key").body);
 			removeObjectfromEnv("key");
 		}
-	}else{
-		let distance = (player.body.position.x - door.position[0]) * (player.body.position.x - door.position[0]) + (player.body.position.y - door.position[1]) * (player.body.position.y - door.position[1]) + (player.body.position.z - door.position[2]) * (player.body.position.z - door.position[2]);
+	} else {
+		let distance = distanceBetween(player, door);
 		if(distance < 1) {
 			player.hasKey = false;
 			console.log("plyer je uporabil kljuc na vratih.");
@@ -188,7 +187,31 @@ var gameplay = function() {//do stuff
 			removeObjectfromEnv("door");
 		}
 	}
+
+	// puckup banana, give player score
+	for(let i = 0; i < bananas.length; i++) {
+		let banana = bananas[i];
+		if(distanceBetween(player, banana) < 1) {
+			world.removeQueue.push(banana.body);
+			let envpos = environment.indexOf(banana);
+			if(envpos >= 0) {
+				world.removeQueue.push(banana.body);
+				environment.splice(envpos, 1);
+				player.data.score += 100;
+			} else {
+				console.warn("Object not found in environment!");
+			}
+		}
+	}
+
 };
+
+function distanceBetween(object1, object2) {
+	let d = (object1.body.position.x - object2.body.position.x) * (object1.body.position.x - object2.body.position.x) +
+		(object1.body.position.y - object2.body.position.y) * (object1.body.position.y - object2.body.position.y) + 
+		(object1.body.position.z - object2.body.position.z) * (object1.body.position.z - object2.body.position.z);
+	return d;
+}
 
 function getObjectfromEnv(tip) {
 	for(var i = 0; i < environment.length; i++) {
@@ -360,22 +383,39 @@ var initGame = function() {
 		position:[-4, 3, 15]
 	};
 
-	key = {
-		position:[4, 0, 0]
-	};
-
-	door = {
-		position:[6,-1.5,-1.5]
-	};
-	
+	let keyPosition = [10, 0, 0];
+	let doorPosition = [6,-1.5,-1.5];
 
 	initPhysics();
 	initObjFiles();
 
-	createObject(objectsVI.key, key.position, undefined, [1, 1, 1],"key").giveBody();
+	key = createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key");
+	key.giveBody();
+
 	// sorry i Broke this door...
-	createObject(objectsVI.door, door.position, undefined, [2, 3, 1],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.banana, [1.5, -0.5, 0], undefined, [1, 1, 1]).giveBody();
+	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door");
+	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
+	
+	// BANANE
+
+	let bananaPositions = [
+		[1, 2, 0],
+		[10, 1, 0],
+		[12, 1, 0],
+		[14, 1, 0],
+		[16, 1, 0],
+		[18, 1, 0],
+		[20, 1, 0],
+		[22, 1, 0],
+		[24, 1, 0],
+		[26, 1, 0],
+	];
+
+	for(let i = 0; i < bananaPositions.length; i++) {
+		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup");
+		b.giveBody();
+		bananas.push(b);
+	}
 
 	// PRIPRAVA LEVELA
 
@@ -423,16 +463,17 @@ var initGame = function() {
 function initPlayer() {
 	let startPosition = [0,0,0];
 
-	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4]);
+	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4], "player");
 	player.hasKey = false;
 
-	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
+	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND | collisionGroups.OBJECT);
 
 	player.data = {};
 	player.data.shootCooldown = 0;
 	player.data.lookDirectionX = +1;
 	player.data.speed = 4;
 	player.data.canJump = false;
+	player.data.score = 0;
 
 	player.actions = {
 		kill: function() {
@@ -451,8 +492,7 @@ function initPlayer() {
 			let bSize = [0.2, 0.2, 0.2];
 			let bRot = [45, 45, 0];
 			let bSpeed = 14;
-			let b = createObject(objectsVI.box, [pos.x, pos.y, pos.z], bRot, bSize);
-			b.type = "bullet";
+			let b = createObject(objectsVI.box, [pos.x, pos.y, pos.z], bRot, bSize, "bullet");
 			b.giveBody(0, undefined, collisionGroups.BULLET, collisionGroups.GROUND | collisionGroups.OBJECT | collisionGroups.BULLET);
 			// if mass is set to 0, body type is STATIC. To make velocity effective, we need to set body type to DYNAMIC and call updateMassProperties();
 			b.body.type = CANNON.Body.DYNAMIC;
