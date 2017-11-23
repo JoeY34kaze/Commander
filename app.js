@@ -280,6 +280,21 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
+	//create texture ----------------------------
+	let boxTexture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, boxTexture); //st = uv  to je ena webgl bedarija da imajo drugacn ime texturnih koordinat
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+	if(texture != undefined){
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,texture);
+	}
+	else{
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
+	}
+
 	let shaderProgram = createShaderProgram();
 
 	var object = {
@@ -290,7 +305,8 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 		scale: scale,
 		body: undefined,
 		type: type,
-		texture: texture,
+		//CHECK mogoce malo nerodno poimenovanje argumenta, ker ni isto kot tekstura, ki jo dobimo kot argument v createObject()
+		texture: boxTexture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
@@ -320,7 +336,7 @@ var initObjFiles = function() {
 		'./banana.obj',
 		'./key.obj',
 		//'./teddy.obj',
-		'./door.obj',
+		'./door.obj'
 	];
 
 	let client;
@@ -342,10 +358,12 @@ var initObjFiles = function() {
 				}
 				//tukej treba namest treh rgb vrednosti dat 2 uv koordinate
 				for(let j = 0; j < 2; j++) {
-
-
-					if(k<1){vertices.push(mesh.textures[i+j]);}
-					else{vertices.push(0.5);}
+					if(k<1){
+						vertices.push(mesh.textures[i+j]);
+					}
+					else{
+						vertices.push(0.5);
+					}
 				}
 			}
 
@@ -394,7 +412,7 @@ var initGame = function() {
 	key.giveBody();
 
 	// sorry i Broke this door...
-	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_key'));
+	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_door'));
 	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 
 	// BANANE
@@ -413,7 +431,7 @@ var initGame = function() {
 	];
 
 	for(let i = 0; i < bananaPositions.length; i++) {
-		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup",document.getElementById('texture_door'));
+		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup",document.getElementById('texture_key'));
 		b.giveBody();
 		bananas.push(b);
 	}
@@ -465,9 +483,8 @@ function initPlayer() {
 	let startPosition = [0,0,0];
 
 
-	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4], "player");
+	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4], "player", document.getElementById('texture_player'));
 	player.hasKey = false;
-	player.texture=document.getElementById('texture_player');
 
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND | collisionGroups.OBJECT);
 
@@ -605,23 +622,8 @@ var draw = function(object) {
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(texCoordAttribLocation);
 
-	//create texture ----------------------------
-	var boxTexture=gl.createTexture();
-	gl.bindTexture(gl.TEXTURE_2D,boxTexture); //st = uv  to je ena webgl bedarija da imajo drugacn ime texturnih koordinat
-	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-
-	if(
-		object.texture!=undefined){gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,object.texture);
-		}
-	else{
-		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
-	}
-
-
-	gl.bindTexture(gl.TEXTURE_2D,boxTexture);
+	gl.bindTexture(gl.TEXTURE_2D,object.texture);
+	//CHECK ce zakomentiram activeTexture zgleda isto kot ce ni (vaj jaz ne opazim razlike)
 	gl.activeTexture(gl.TEXTURE0);
 
 
