@@ -8,7 +8,7 @@ var fragmentShader;
 // game elements
 var camera;
 var player;
-var keyPosition = [10, 0, 0];
+var keyPosition = [54, -4.5, 1];
 var doorPosition = [6,-1.5,-1.5];
 var key;
 var door;
@@ -190,11 +190,19 @@ var gameplay = function() {//do stuff
 		}
 	}
 
-	// puckup banana, give player score
-	for(let i = 0; i < bananas.length; i++) {
-		let banana = bananas[i];
+	// animiraj kljuc
+	key.rotation[1] += 0.5;
+
+	// za vsako banano ...
+	bananas.forEach(function(banana) {
+		// animiraj
+		banana.rotation[1] += 1;
+
+		// preveri distanco s playerjem in poberi
 		if(distanceBetween(player, banana) < 1) {
+			// remove banana and give 100 score
 			world.removeQueue.push(banana.body);
+			// remove from environment
 			let envpos = environment.indexOf(banana);
 			if(envpos >= 0) {
 				world.removeQueue.push(banana.body);
@@ -203,8 +211,15 @@ var gameplay = function() {//do stuff
 			} else {
 				console.warn("Object not found in environment!");
 			}
+			// remove from bananas
+			let banpos = bananas.indexOf(banana);
+			if(banpos >= 0) {
+				bananas.splice(banpos, 1);
+			} else {
+				console.warn("Object not found in bananas!");
+			}
 		}
-	}
+	});
 
 };
 
@@ -414,65 +429,9 @@ var initGame = function() {
 	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_door'));
 	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 
-	// BANANE
-
-	let bananaPositions = [
-		[1, 2, 0],
-		[10, 1, 0],
-		[12, 1, 0],
-		[14, 1, 0],
-		[16, 1, 0],
-		[18, 1, 0],
-		[20, 1, 0],
-		[22, 1, 0],
-		[24, 1, 0],
-		[26, 1, 0],
-	];
-
-	for(let i = 0; i < bananaPositions.length; i++) {
-		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup",document.getElementById('texture_key'));
-		b.giveBody();
-		bananas.push(b);
-	}
-
 	// PRIPRAVA LEVELA
-
-	function createPlatform(name, position, rotation, scale) {
-		return {
-			name: name, // za lastno referenco
-			position: position,
-			rotation: rotation,
-			scale: scale,
-		};
-	}
-	let platforms = [
-		createPlatform("zacetek", [0, -3, 0], [0, 0, 0], [5, 1, 3]),
-		createPlatform("zadnja stena", [-4, 0, 0], [0, 0, 0], [0.2, 4, 2]),
-		createPlatform("prva rampa", [7, -2, 0], [0, 0, 0], [5, 1, 1]),
-		createPlatform("tla za rampo", [13, -3, 0], [0, 0, 0], [3, 1, 3]),
-		createPlatform("tla za rampo, ozka", [16, -3, 0], [0, 0, 0], [4, 1, 1.5]),
-		createPlatform("tla, skupna s stopnicami", [30, -3, 0], [0, 0, 0], [8, 1, 3]),
-		createPlatform("stopnice: 1", [28, -2, -1.5], [0, 0, 0], [2, 1.5, 1.5]),
-		createPlatform("stopnice: 2", [32, -1, -1.5], [0, 0, 0], [2, 2, 1.5]),
-		createPlatform("stopnice: 3", [36, 0, -1.5], [0, 0, 0], [2, 2.5, 1.5]),
-		createPlatform("tla naprej od stopnic (spodaj)", [41, -3, 1.5], [0, 0, 0], [3, 1, 1.5]),
-		createPlatform("platforma naprej od stopnic", [41, 2, -1.5], [0, 0, 0], [3, 0.5, 1.5]),
-		createPlatform("naprej od stopnic", [48, -3, 0], [0, 0, 0], [4, 1, 3]),
-		createPlatform("tla poleg podtal", [58.25, -5, -2], [0, 0, 0], [6.25, 3, 1]),
-		createPlatform("tla nad podtlemi", [55, -2.5, 1], [0, 0, 0], [3, 0.5, 2]),
-		createPlatform("podtla tla", [57, -8, 1], [0, 0, 0], [5, 0.5, 2]),
-		createPlatform("podtla stena na levi", [51, -6, 0], [0, 0, 0], [1, 2.5, 3]),
-		createPlatform("podtla desno stopnice: 1", [62, -7.25, 1], [0, 0, 0], [0.5, 1.25, 2]),
-		createPlatform("podtla desno stopnice: 2", [63, -6.5, 1], [0, 0, 0], [0.5, 2, 2]),
-		createPlatform("podtla desno stopnice: 3", [64, -5.75, 1], [0, 0, 0], [0.5, 2.75, 2]),
-		createPlatform("rampa naprej od stopnic", [71, -3, 0], [0, 0, 0], [3, 1, 1]),
-		createPlatform("tla naprej od rampe (konec?)", [76, -3.5, 0], [0, 0, 0], [4, 1, 3]),
-	];
-
-	for(let i = 0; i < platforms.length; i++) {
-		createObject(objectsVI.box, platforms[i].position, platforms[i].rotation, platforms[i].scale)
-			.giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
-	}
+	loadPlatforms();
+	loadBananas();
 
 	initPlayer();
 	console.log(environment);
@@ -561,6 +520,72 @@ function initPlayer() {
 		if(contactNormal.dot(upAxis) > 0.5) // Use a "good" threshold value between 0 and 1 here!
 		player.data.canJump = true;
 	});
+}
+
+function loadBananas() {
+	let bananaPositions = [
+		[-2, 1, 0], // na startu
+		[4, 0, 0], // rampa
+		[7, 0, 0], // rampa
+		[10, 0, 0], // rampa
+		[15, -1, -2], // levodesno
+		[15, -1, +2], // levodesno
+		[21, 1.5, 0], // nad luknjo
+		[28, 0, -1.5], // stopnica 1
+		[32, 2, -1.5], // stopnica 2
+		[40, 3.5, -1.5], // stopnice na vrh
+		[49, 5, -1.5], // odskok
+		//[54, -4.5, 1], // kljuc ??
+		[57.5, -6.5, 0], // podtla
+		[57.5, -6.5, 2], // podtla
+		[70, -1, 0], // rampa konc
+		[73, -1, 0], // rampa konc
+	];
+
+	for(let i = 0; i < bananaPositions.length; i++) {
+		let b = createObject(objectsVI.banana, bananaPositions[i], [0, Math.random() * 180, 30], [1, 1, 1], "pickup");
+		b.giveBody();
+		bananas.push(b);
+	}
+}
+
+function loadPlatforms() {
+	function createPlatform(name, position, rotation, scale) {
+		return {
+			name: name, // za lastno referenco
+			position: position,
+			rotation: rotation,
+			scale: scale
+		};
+	}
+	let platforms = [
+		createPlatform("zacetek", [0, -3, 0], [0, 0, 0], [5, 1, 3]),
+		createPlatform("zadnja stena", [-4, 0, 0], [0, 0, 0], [0.2, 4, 2]),
+		createPlatform("prva rampa", [7, -2, 0], [0, 0, 0], [5, 1, 1]),
+		createPlatform("tla za rampo", [13, -3, 0], [0, 0, 0], [3, 1, 3]),
+		createPlatform("tla za rampo, ozka", [16, -3, 0], [0, 0, 0], [4, 1, 1.5]),
+		createPlatform("tla, skupna s stopnicami", [30, -3, 0], [0, 0, 0], [8, 1, 3]),
+		createPlatform("stopnice: 1", [28, -2, -1.5], [0, 0, 0], [2, 1.5, 1.5]),
+		createPlatform("stopnice: 2", [32, -1, -1.5], [0, 0, 0], [2, 2, 1.5]),
+		createPlatform("stopnice: 3", [36, 0, -1.5], [0, 0, 0], [2, 2.5, 1.5]),
+		createPlatform("tla naprej od stopnic (spodaj)", [41, -3, 1.5], [0, 0, 0], [3, 1, 1.5]),
+		createPlatform("platforma naprej od stopnic", [41, 2, -1.5], [0, 0, 0], [3, 0.5, 1.5]),
+		createPlatform("naprej od stopnic", [48, -3, 0], [0, 0, 0], [4, 1, 3]),
+		createPlatform("tla poleg podtal", [58.25, -5, -2], [0, 0, 0], [6.25, 3, 1]),
+		createPlatform("tla nad podtlemi", [55, -2.5, 1], [0, 0, 0], [3, 0.5, 2]),
+		createPlatform("podtla tla", [57, -8, 1], [0, 0, 0], [5, 0.5, 2]),
+		createPlatform("podtla stena na levi", [51, -6, 0], [0, 0, 0], [1, 2.5, 3]),
+		createPlatform("podtla desno stopnice: 1", [62, -7.25, 1], [0, 0, 0], [0.5, 1.25, 2]),
+		createPlatform("podtla desno stopnice: 2", [63, -6.5, 1], [0, 0, 0], [0.5, 2, 2]),
+		createPlatform("podtla desno stopnice: 3", [64, -5.75, 1], [0, 0, 0], [0.5, 2.75, 2]),
+		createPlatform("rampa naprej od stopnic", [71, -3, 0], [0, 0, 0], [3, 1, 1]),
+		createPlatform("tla naprej od rampe (konec?)", [76, -3.5, 0], [0, 0, 0], [4, 1, 3]),
+	];
+
+	for(let i = 0; i < platforms.length; i++) {
+		createObject(objectsVI.box, platforms[i].position, platforms[i].rotation, platforms[i].scale)
+			.giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
+	}
 }
 
 // izrise izbran objekt
@@ -669,8 +694,7 @@ function handleKeys() {
 function handleKeyDown(event) {
 	// storing the pressed state for individual key
 	currentlyPressedKeys[event.code] = true;
-
-	if (player.data.canJump && event.code == "Space") {
+	if (player.data.canJump && event.code == "Space") { 
 		// do jump
 		player.data.canJump = false;
 		player.body.velocity.y = 6;
