@@ -32,43 +32,43 @@ var collisionGroups = {
 // objekti
 var objectsVI = {
 	box: {
-		// X, Y, Z           R, G, B
+		// X, Y, Z           U,V
 		vertices: [
 			// Top
-			-1.0, 1.0, -1.0,   0.82, 0.27, 0.27,
-			-1.0, 1.0, 1.0,    0.82, 0.27, 0.27,
-			1.0, 1.0, 1.0,     0.82, 0.27, 0.27,
-			1.0, 1.0, -1.0,    0.82, 0.27, 0.27,
+			-1.0, 1.0, -1.0,   0,0,
+			-1.0, 1.0, 1.0,    0,1,
+			1.0, 1.0, 1.0,     1,1,
+			1.0, 1.0, -1.0,    1,0,
 
 			// Left
-			-1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-			-1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-			-1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-			-1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+			-1.0, 1.0, 1.0,    0,0,
+			-1.0, -1.0, 1.0,   1,0,
+			-1.0, -1.0, -1.0,  1,1,
+			-1.0, 1.0, -1.0,   0,1,
 
 			// Right
-			1.0, 1.0, 1.0,    0.22, 0.66, 0.22,
-			1.0, -1.0, 1.0,   0.22, 0.66, 0.22,
-			1.0, -1.0, -1.0,  0.22, 0.66, 0.22,
-			1.0, 1.0, -1.0,   0.22, 0.66, 0.22,
+			1.0, 1.0, 1.0,    1,1,
+			1.0, -1.0, 1.0,   0,1,
+			1.0, -1.0, -1.0,  0,0,
+			1.0, 1.0, -1.0,   1,0,
 
 			// Front
-			1.0, 1.0, 1.0,      0.82, 0.73, 0.27,
-			1.0, -1.0, 1.0,     0.82, 0.73, 0.27,
-			-1.0, -1.0, 1.0,    0.82, 0.73, 0.27,
-			-1.0, 1.0, 1.0,     0.82, 0.73, 0.27,
+			1.0, 1.0, 1.0,      1,1,
+			1.0, -1.0, 1.0,     1,0,
+			-1.0, -1.0, 1.0,    0,0,
+			-1.0, 1.0, 1.0,     0,1,
 
 			// Back
-			1.0, 1.0, -1.0,      0.82, 0.73, 0.27,
-			1.0, -1.0, -1.0,     0.82, 0.73, 0.27,
-			-1.0, -1.0, -1.0,    0.82, 0.73, 0.27,
-			-1.0, 1.0, -1.0,     0.82, 0.73, 0.27,
+			1.0, 1.0, -1.0,      0,0,
+			1.0, -1.0, -1.0,     0,1,
+			-1.0, -1.0, -1.0,    1,1,
+			-1.0, 1.0, -1.0,     1,0,
 
 			// Bottom
-			-1.0, -1.0, -1.0,   0.82, 0.27, 0.27,
-			-1.0, -1.0, 1.0,    0.82, 0.27, 0.27,
-			1.0, -1.0, 1.0,     0.82, 0.27, 0.27,
-			1.0, -1.0, -1.0,    0.82, 0.27, 0.27,
+			-1.0, -1.0, -1.0,   1,1,
+			-1.0, -1.0, 1.0,    1,0,
+			1.0, -1.0, 1.0,     0,0,
+			1.0, -1.0, -1.0,    0,1,
 		],
 		indices: [
 			// Top
@@ -270,8 +270,7 @@ function initPhysics() {
 }
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
-// prvi parameter {vertices, indices} naj bo objekt iz objectsVI (npr. objectsVI.box)
-function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "") {
+function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "", texture) {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -291,6 +290,7 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 		scale: scale,
 		body: undefined,
 		type: type,
+		texture: texture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
@@ -319,7 +319,7 @@ var initObjFiles = function() {
 	var objectsImport = [
 		'./banana.obj',
 		'./key.obj',
-		'./teddy.obj',
+		//'./teddy.obj',
 		'./door.obj',
 	];
 
@@ -340,10 +340,15 @@ var initObjFiles = function() {
 				for(let j = 0; j < 3; j++) {
 					vertices.push(mesh.vertices[i + j]);
 				}
-				for(let j = 0; j < 3; j++) {
-					vertices.push(0.25);
+				//tukej treba namest treh rgb vrednosti dat 2 uv koordinate
+				for(let j = 0; j < 2; j++) {
+					
+					
+					if(k<1){vertices.push(mesh.textures[i+j]);}
+					else{vertices.push(0.5);}
 				}
 			}
+			
 			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
@@ -388,11 +393,11 @@ var initGame = function() {
 	initPhysics();
 	initObjFiles();
 
-	key = createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key");
+	key = createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key",document.getElementById('texture_key'));
 	key.giveBody();
 
 	// sorry i Broke this door...
-	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door");
+	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_key'));
 	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 	
 	// BANANE
@@ -411,7 +416,7 @@ var initGame = function() {
 	];
 
 	for(let i = 0; i < bananaPositions.length; i++) {
-		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup");
+		let b = createObject(objectsVI.banana, bananaPositions[i], undefined, [1, 1, 1], "pickup",document.getElementById('texture_door'));
 		b.giveBody();
 		bananas.push(b);
 	}
@@ -423,7 +428,7 @@ var initGame = function() {
 			name: name, // za lastno referenco
 			position: position,
 			rotation: rotation,
-			scale: scale
+			scale: scale,
 		};
 	}
 	let platforms = [
@@ -462,10 +467,13 @@ var initGame = function() {
 function initPlayer() {
 	let startPosition = [0,0,0];
 
+
 	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4], "player");
 	player.hasKey = false;
+	player.texture=document.getElementById('texture_player');
 
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND | collisionGroups.OBJECT);
+
 
 	player.data = {};
 	player.data.shootCooldown = 0;
@@ -584,7 +592,7 @@ var draw = function(object) {
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
 
 	let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
-	let colorAttribLocation = gl.getAttribLocation(program, 'vertColor');
+	let texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord');
 
 	// gl.vertexAttribPointer(
 	//   Attribute location,
@@ -594,11 +602,31 @@ var draw = function(object) {
 	//   Size of an individual vertex,
 	//   Offset from the beginning of a single vertex to this attribute
 	// );
-	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 0);
-	gl.vertexAttribPointer(colorAttribLocation, 3, gl.FLOAT, gl.FALSE, 6 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 0);//5 namest 6 ker smo rgb zamenjal z uv koordinatam
+	gl.vertexAttribPointer(texCoordAttribLocation, 2, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
 
 	gl.enableVertexAttribArray(positionAttribLocation);
-	gl.enableVertexAttribArray(colorAttribLocation);
+	gl.enableVertexAttribArray(texCoordAttribLocation);
+
+	//create texture ----------------------------
+	var boxTexture=gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D,boxTexture); //st = uv  to je ena webgl bedarija da imajo drugacn ime texturnih koordinat
+	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+	
+	if(
+		object.texture!=undefined){gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,object.texture);
+		}
+	else{
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
+	}
+
+	
+	gl.bindTexture(gl.TEXTURE_2D,boxTexture);
+	gl.activeTexture(gl.TEXTURE0);
+
 
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);

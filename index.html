@@ -30,10 +30,11 @@
 	    <script id="shader-fs" type="x-shader/x-fragment">
 	    	precision mediump float;
 
-	    	varying vec3 fragColor;
+			varying vec2 fragTexCoord;
+			uniform sampler2D sampler;
 
 	    	void main() {
-	    		gl_FragColor = vec4(fragColor, 1.0);
+	    		gl_FragColor = texture2D(sampler, fragTexCoord);
 	    	}
 	    </script>
 
@@ -42,16 +43,16 @@
 	    	precision mediump float;
 
 	    	attribute vec3 vertPosition;
-	    	attribute vec3 vertColor;
+	    	attribute vec2 vertTexCoord;
 
-	    	varying vec3 fragColor;
+	    	varying vec2 fragTexCoord;
 
 	    	uniform mat4 mWorld;
 	    	uniform mat4 mView;
 	    	uniform mat4 mProj;
 
 	    	void main() {
-	    		fragColor = vertColor;
+	    		fragTexCoord = vertTexCoord;
 	    		gl_Position = mProj * mView * mWorld * vec4(vertPosition, 1.0);
 	    	}
 	    </script>
@@ -62,11 +63,15 @@
 				Your browser does not support HTML5
 			</canvas>
 			<div id="overlay">
-					<div>Time left: <span id="time"></span></div>
-					<div>Score : <span id="score"></span></div>
-					<progress id="health" value="80" max="100"></progress>
-				</div>
-	</div>
+				<div>Time left: <span id="time"></span></div>
+				<div>Score : <span id="score"></span></div>
+				<progress id="health" value="80" max="100"></progress>
+			</div>
+			<img id="texture_platform" src="tex.png" width="0" height="0"></img>
+			<img id="texture_door" src="tex_door.png" width="0" height="0"></img>
+			<img id="texture_player" src="tex_player.png" width="0" height="0"></img>	
+			<img id="texture_key" src="tex_key.png" width="0" height="0"></img>	
+		</div>
 		<br />
 		<script src="webgl-obj-loader.js"></script>
 		<script src="cannon.js"></script>
