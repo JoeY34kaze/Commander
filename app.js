@@ -245,7 +245,7 @@ function initPhysics() {
 }
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
-function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type="") {
+function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type="", texture) {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -265,6 +265,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 		scale: scale,
 		body: undefined,
 		type: type,
+		texture: texture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
@@ -310,15 +311,21 @@ var initObjFiles = function() {
 		client.open('GET', objForIm,false);
 		client.addEventListener("load", function() {
 			let mesh = new OBJ.Mesh(client.responseText);
+			console.log(mesh);
 			let vertices = [];
 			for(let i = 0; i < mesh.vertices.length; i += 3) {
 				for(let j = 0; j < 3; j++) {
 					vertices.push(mesh.vertices[i + j]);
 				}
-				for(let j = 0; j < 3; j++) {
-					vertices.push(0.5);
+				//tukej treba namest treh rgb vrednosti dat 2 uv koordinate
+				for(let j = 0; j < 2; j++) {
+					
+					
+					if(k<1){vertices.push(mesh.textures[i+j]);}
+					else{vertices.push(0.5);}
 				}
 			}
+			console.log(k+" | "+mesh.textures.length);
 			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
@@ -346,9 +353,9 @@ var initGame = function() {
 	initPhysics();
 	initObjFiles();
 
-	createObject(objectsVI.key.vertices, objectsVI.key.indices, key.position, undefined, [0.1, 0.1, 0.1],"key").giveBody();
-	createObject(objectsVI.door.vertices, objectsVI.door.indices, door.position, undefined, [0.8, 0.8, 0.8],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
-	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
+	createObject(objectsVI.key.vertices, objectsVI.key.indices, key.position, undefined, [0.1, 0.1, 0.1],"key",document.getElementById('texture_key')).giveBody();
+	createObject(objectsVI.door.vertices, objectsVI.door.indices, door.position, undefined, [0.8, 0.8, 0.8],"door",document.getElementById('texture_door')).giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
+	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4],"banana",document.getElementById('texture_door')).giveBody();
 
 	// PRIPRAVA LEVELA
 
@@ -357,7 +364,7 @@ var initGame = function() {
 			name: name, // za lastno referenco
 			position: position,
 			rotation: rotation,
-			scale: scale
+			scale: scale,
 		};
 	}
 	let platforms = [
@@ -395,7 +402,9 @@ var initGame = function() {
 
 function initPlayer() {
 	let startPosition = [0,0,0];
-	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, startPosition, undefined, [0.5, 1, 0.4]);
+	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, startPosition, undefined, [0.5, 1, 0.4],document.getElementById('texture_player') );
+	player.texture=document.getElementById('texture_player');
+	console.log(player.texture);
 	player.hasKey=false;
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
 
@@ -539,7 +548,14 @@ var draw = function(object) {
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-	gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
+	
+	if(
+		object.texture!=undefined){gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,object.texture);
+		}
+	else{
+		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
+	}
+
 	
 	gl.bindTexture(gl.TEXTURE_2D,boxTexture);
 	gl.activeTexture(gl.TEXTURE0);
