@@ -347,9 +347,8 @@ var initGame = function() {
 	initObjFiles();
 
 	createObject(objectsVI.key.vertices, objectsVI.key.indices, key.position, undefined, [0.1, 0.1, 0.1],"key").giveBody();
-	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
 	createObject(objectsVI.door.vertices, objectsVI.door.indices, door.position, undefined, [0.8, 0.8, 0.8],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
-	
+	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
 
 	// PRIPRAVA LEVELA
 
@@ -406,9 +405,17 @@ function initPlayer() {
 	player.data.speed = 4;
 	player.data.canJump = false;
 
-	player.actions = {
+	player.actions = {//nazaj postavit stvari katere je player unicil prej
 		kill: function() {
 			player.body.position = new CANNON.Vec3(0, 0, 0);
+
+			if(getObjectfromEnv("key")==undefined){
+				createObject(objectsVI.key.vertices, objectsVI.key.indices, key.position, undefined, [0.1, 0.1, 0.1],"key").giveBody();
+			}
+
+			if(getObjectfromEnv("door")==undefined){				
+				createObject(objectsVI.door.vertices, objectsVI.door.indices, door.position, undefined, [0.8, 0.8, 0.8],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
+			}
 		},
 		shoot: function() {
 			let pos = player.body.position;
