@@ -124,7 +124,7 @@ var onStart = function () {
 		//hud
 
 		scoreNode.nodeValue = player.data.score;
-		timeNode.nodeValue = "2"; 
+		timeNode.nodeValue = "2";
 		//let health = document.getElementById("health")
 		//health.value = blabla; - health naj porihta funkcija ob koliziji z sovragom
 
@@ -210,7 +210,7 @@ var gameplay = function() {//do stuff
 
 function distanceBetween(object1, object2) {
 	let d = (object1.body.position.x - object2.body.position.x) * (object1.body.position.x - object2.body.position.x) +
-		(object1.body.position.y - object2.body.position.y) * (object1.body.position.y - object2.body.position.y) + 
+		(object1.body.position.y - object2.body.position.y) * (object1.body.position.y - object2.body.position.y) +
 		(object1.body.position.z - object2.body.position.z) * (object1.body.position.z - object2.body.position.z);
 	return d;
 }
@@ -242,7 +242,7 @@ function initHUD() {
 	// Create text nodes to save some time for the browser.
 	timeNode = document.createTextNode("");
 	scoreNode = document.createTextNode("");
-	
+
 	// Add those text nodes where they need to go
 	timeElement.appendChild(timeNode);
 	scoreElement.appendChild(scoreNode);
@@ -342,13 +342,13 @@ var initObjFiles = function() {
 				}
 				//tukej treba namest treh rgb vrednosti dat 2 uv koordinate
 				for(let j = 0; j < 2; j++) {
-					
-					
+
+
 					if(k<1){vertices.push(mesh.textures[i+j]);}
 					else{vertices.push(0.5);}
 				}
 			}
-			
+
 			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
@@ -366,18 +366,15 @@ var initObjFiles = function() {
 			if(vertices[i] < min) min = vertices[i];
 			if(vertices[i] > max) max = vertices[i];
 		}
-		// ce je minimalna vertica negativna, vse vertice premaknemo v plus,
-		// ce pa je pozitivna, vse vertice premaknemo blizje 0
-		// (premaknemo objekt v ++ kvadrant koordinatnega sistema)
+
+		//pogledamo katera absolutna vrednost je vecja
+		min *= -1;
+		if(min > max) max = min;
+
+		// vse vertice delimo z max, da zmanjsamo predmet na (-1, 1) - to kar smo hoteli.
+		// Te nove vertice lahko zdaj vrnemo.
 		for(let i = 0; i < vertices.length; i++) {
-			vertices[i] += -min;
-		}
-		max += -min;
-		
-		// vse vertice delimo z max/2, da zmanjsamo predmet na (0, 2) in odstejemo -1, da predmet premaknemo
-		// na (-1, 1) - to kar smo hoteli. Te nove vertice lahko zdaj vrnemo.
-		for(let i = 0; i < vertices.length; i++) {
-			vertices[i] = (vertices[i] / (max / 2)) - 1;
+			vertices[i] /= max;
 		}
 		return vertices;
 	}
@@ -399,7 +396,7 @@ var initGame = function() {
 	// sorry i Broke this door...
 	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_key'));
 	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
-	
+
 	// BANANE
 
 	let bananaPositions = [
@@ -490,7 +487,7 @@ function initPlayer() {
 				createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key").giveBody();
 			}
 
-			if(getObjectfromEnv("door") == undefined) {				
+			if(getObjectfromEnv("door") == undefined) {
 				createObject(objectsVI.door, doorPosition, undefined, [1, 1, 1], "door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 			}
 		},
@@ -585,7 +582,7 @@ var draw = function(object) {
 	mat4.rotateX(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[0]));
 	mat4.rotateY(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[1]));
 	mat4.rotateZ(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[2]));
-	
+
 	mat4.mul(worldMatrix, worldMatrix, transformMatrix);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
@@ -615,7 +612,7 @@ var draw = function(object) {
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-	
+
 	if(
 		object.texture!=undefined){gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,object.texture);
 		}
@@ -623,7 +620,7 @@ var draw = function(object) {
 		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
 	}
 
-	
+
 	gl.bindTexture(gl.TEXTURE_2D,boxTexture);
 	gl.activeTexture(gl.TEXTURE0);
 
@@ -636,7 +633,7 @@ var currentlyPressedKeys = {};
 
 function handleKeys() {
 	// tipko drzimo ...
-	if (currentlyPressedKeys["ArrowLeft"]) { 
+	if (currentlyPressedKeys["ArrowLeft"]) {
 		player.body.velocity.x = -player.data.speed;
 		player.data.lookDirectionX = -1;
 	}
@@ -644,7 +641,7 @@ function handleKeys() {
 		player.body.velocity.x = +player.data.speed;
 		player.data.lookDirectionX = +1;
 	}
-	if (currentlyPressedKeys["ArrowUp"]) { 
+	if (currentlyPressedKeys["ArrowUp"]) {
 		if(player.body.position.z > -2)
 			player.body.velocity.z = -player.data.speed;
 		else
@@ -674,7 +671,7 @@ function handleKeyDown(event) {
 	// storing the pressed state for individual key
 	currentlyPressedKeys[event.code] = true;
 
-	if (player.data.canJump && event.code == "Space") { 
+	if (player.data.canJump && event.code == "Space") {
 		// do jump
 		player.data.canJump = false;
 		player.body.velocity.y = 6;
