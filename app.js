@@ -8,6 +8,8 @@ var fragmentShader;
 // game elements
 var camera;
 var player;
+var keyPosition = [10, 0, 0];
+var doorPosition = [6,-1.5,-1.5];
 var key;
 var door;
 var bananas = [];
@@ -383,9 +385,6 @@ var initGame = function() {
 		position:[-4, 3, 15]
 	};
 
-	let keyPosition = [10, 0, 0];
-	let doorPosition = [6,-1.5,-1.5];
-
 	initPhysics();
 	initObjFiles();
 
@@ -480,11 +479,11 @@ function initPlayer() {
 			player.body.position = new CANNON.Vec3(0, 0, 0);
 			//nazaj postavit stvari katere je player unicil prej
 			if(getObjectfromEnv("key") == undefined) {
-				createObject(objectsVI.key, key.position, undefined, [0.1, 0.1, 0.1],"key").giveBody();
+				createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key").giveBody();
 			}
 
 			if(getObjectfromEnv("door") == undefined) {				
-				createObject(objectsVI.door, door.position, undefined, [0.8, 0.8, 0.8],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
+				createObject(objectsVI.door, doorPosition, undefined, [1, 1, 1], "door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 			}
 		},
 		shoot: function() {
