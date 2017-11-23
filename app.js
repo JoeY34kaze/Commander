@@ -305,8 +305,7 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 		scale: scale,
 		body: undefined,
 		type: type,
-		//CHECK mogoce malo nerodno poimenovanje argumenta, ker ni isto kot tekstura, ki jo dobimo kot argument v createObject()
-		texture: boxTexture,
+		gltexture: boxTexture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
@@ -622,10 +621,8 @@ var draw = function(object) {
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(texCoordAttribLocation);
 
-	gl.bindTexture(gl.TEXTURE_2D,object.texture);
-	//CHECK ce zakomentiram activeTexture zgleda isto kot ce ni (vaj jaz ne opazim razlike)
-	gl.activeTexture(gl.TEXTURE0);
-
+	gl.bindTexture(gl.TEXTURE_2D,object.gltexture);
+	//gl.activeTexture(gl.TEXTURE0);
 
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);
