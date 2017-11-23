@@ -2,12 +2,16 @@
 var canvas;
 var gl;
 
+var iii=0;
+
 var vertexShader;
 var fragmentShader;
 
 // game elements
 var camera;
 var player;
+var key;
+var door;
 var environment = []; //not se loh doda z global.environment.push(obj);
 
 // hud
@@ -167,7 +171,42 @@ var gameplay = function() {//do stuff
 	if(player.body.position.y < -10) {
 		player.actions.kill();
 	}
+	if(player.hasKey==false){
+		let distance=(player.body.position.x-key.position[0])*(player.body.position.x-key.position[0])+(player.body.position.y-key.position[1])*(player.body.position.y-key.position[1])+(player.body.position.z-key.position[2])*(player.body.position.z-key.position[2]);
+		if(distance<1){
+			player.hasKey=true;
+			console.log("plyer je dobil kljuc.");
+			world.removeQueue.push(getObjectfromEnv("key").body);
+			removeObjectfromEnv("key");
+		}
+	}else{
+		let distance=(player.body.position.x-door.position[0])*(player.body.position.x-door.position[0])+(player.body.position.y-door.position[1])*(player.body.position.y-door.position[1])+(player.body.position.z-door.position[2])*(player.body.position.z-door.position[2]);
+		if(distance<1){
+			player.hasKey=false;
+			console.log("plyer je uporabil kljuc na vratih.");
+			world.removeQueue.push(getObjectfromEnv("door").body);
+			removeObjectfromEnv("door");
+		}
+	}
 };
+
+function getObjectfromEnv(tip){
+	for(var i=0;i<environment.length;i++){
+		if(environment[i].type===tip){
+			return environment[i];
+		}
+	}
+}
+
+function removeObjectfromEnv(tip){
+	for(var i=0;i<environment.length;i++){
+		if(environment[i].type===tip){
+			environment.splice(i,1);
+			break;
+		}
+	}
+}
+
 
 
 function initHUD() {
@@ -206,7 +245,7 @@ function initPhysics() {
 }
 
 // keira objekt s podanimi parametri (obvezno podati vertice in indice)
-function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1]) {
+function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type="") {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -225,7 +264,7 @@ function createObject(vertices, indices, position = [0, 0, 0], rotation = [0, 0,
 		rotation: rotation,
 		scale: scale,
 		body: undefined,
-		type: "",
+		type: type,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
@@ -258,6 +297,7 @@ var initObjFiles = function() {
 	//in v initGame kreiras nov objekt
 	objectsImport.push('./banana.obj');
 	objectsImport.push('./key.obj');
+	objectsImport.push('./door.obj');
 
 	let client;
 	let objForIm;
@@ -287,17 +327,29 @@ var initObjFiles = function() {
 	}
 };
 
+
 var initGame = function() {
 	// init camera
 	camera = {
 		position:[-4, 3, 15]
 	};
 
+	key = {
+		position:[4, 0, 0]
+	};
+
+	door={
+		position:[6,-1.5,-1.5]
+	}
+	
+
 	initPhysics();
 	initObjFiles();
 
-	createObject(objectsVI.key.vertices, objectsVI.key.indices, [4, 0, 0], undefined, [0.1, 0.1, 0.1]).giveBody();
+	createObject(objectsVI.key.vertices, objectsVI.key.indices, key.position, undefined, [0.1, 0.1, 0.1],"key").giveBody();
 	createObject(objectsVI.banana.vertices, objectsVI.banana.indices, [1.5, -0.5, 0], undefined, [0.4, 0.4, 0.4]).giveBody();
+	createObject(objectsVI.door.vertices, objectsVI.door.indices, door.position, undefined, [0.8, 0.8, 0.8],"door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
+	
 
 	// PRIPRAVA LEVELA
 
@@ -345,6 +397,7 @@ var initGame = function() {
 function initPlayer() {
 	let startPosition = [0,0,0];
 	player = createObject(objectsVI.box.vertices, objectsVI.box.indices, startPosition, undefined, [0.5, 1, 0.4]);
+	player.hasKey=false;
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND);
 
 	player.data = {};
