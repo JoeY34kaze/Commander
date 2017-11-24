@@ -701,8 +701,13 @@ var draw = function(object) {
 	let viewMatrix = new Float32Array(16);
 	let projMatrix = new Float32Array(16);
 
+	let keybientlight = 0.25;
+	if(distanceBetween(player, key) < 10 && key.visible) {
+		keybientlight *= (11 - distanceBetween(player, key)) / 2;
+	}
+
 	let normalMatrix = new Float32Array(9);
-	let ambientCol = new Float32Array([0.25, 0.25, 0.25]);
+	let ambientCol = new Float32Array([keybientlight, 0.25, 0.25]);
 	let lightDir = new Float32Array([-0.4, -0.6, -0.7]);
 	let dirCol = new Float32Array([0.7, 0.7, 0.7]);
 
