@@ -8,10 +8,9 @@ var fragmentShader;
 // game elements
 var camera;
 var player;
-var keyPosition = [54, -4.5, 1];
-var doorPosition = [6,-1.5,-1.5];
 var key;
 var door;
+var enemies = [];
 var bananas = [];
 var environment = []; //not se loh doda z global.environment.push(obj);
 
@@ -138,7 +137,7 @@ var onStart = function () {
 		gameplay();
 
 		environment.forEach(function(object) {
-			draw(object);
+			if(object.visible) draw(object);
 		});
 
 		requestAnimationFrame(update);
@@ -172,21 +171,22 @@ var gameplay = function() {//do stuff
 	if(player.body.position.y < -10) {
 		player.actions.kill();
 	}
-	if(player.hasKey == false) {
-		let distance = distanceBetween(player, key);
-		if(distance < 1) {
-			player.hasKey = true;
+
+	if(player.data.hasKey == false) {
+		if(key.visible && distanceBetween(player, key) < 1) {
+			player.data.hasKey = true;
 			console.log("plyer je dobil kljuc.");
-			world.removeQueue.push(getObjectfromEnv("key").body);
-			removeObjectfromEnv("key");
+			//world.removeQueue.push(getObjectfromEnv("key").body);
+			//removeObjectfromEnv("key");
+			key.visible = false;
 		}
 	} else {
-		let distance = distanceBetween(player, door);
-		if(distance < 1) {
-			player.hasKey = false;
+		if(door.visible && distanceBetween(player, door) < 1) {
+			player.data.hasKey = false;
 			console.log("plyer je uporabil kljuc na vratih.");
-			world.removeQueue.push(getObjectfromEnv("door").body);
-			removeObjectfromEnv("door");
+			//world.removeQueue.push(getObjectfromEnv("door").body);
+			//removeObjectfromEnv("door");
+			door.visible = false;
 		}
 	}
 
@@ -199,25 +199,46 @@ var gameplay = function() {//do stuff
 		banana.rotation[1] += 1;
 
 		// preveri distanco s playerjem in poberi
-		if(distanceBetween(player, banana) < 1) {
+		if(banana.visible && distanceBetween(player, banana) < 1) {
 			// remove banana and give 100 score
-			world.removeQueue.push(banana.body);
+			//world.removeQueue.push(banana.body);
+			banana.visible = false;
 			// remove from environment
-			let envpos = environment.indexOf(banana);
-			if(envpos >= 0) {
-				world.removeQueue.push(banana.body);
-				environment.splice(envpos, 1);
+			//let envpos = environment.indexOf(banana);
+			//if(envpos >= 0) {
+			//	world.removeQueue.push(banana.body);
+			//	environment.splice(envpos, 1);
 				player.data.score += 100;
-			} else {
-				console.warn("Object not found in environment!");
-			}
+			//} else {
+			//	console.warn("Object not found in environment!");
+			//}
 			// remove from bananas
-			let banpos = bananas.indexOf(banana);
-			if(banpos >= 0) {
-				bananas.splice(banpos, 1);
-			} else {
-				console.warn("Object not found in bananas!");
+			//let banpos = bananas.indexOf(banana);
+			//if(banpos >= 0) {
+			//	bananas.splice(banpos, 1);
+			//} else {
+			//	console.warn("Object not found in bananas!");
+			//}
+		}
+	});
+
+	// za vsakega enemya
+	enemies.forEach(function(enemy) {
+		if(enemy.data.moveLimits.length > 0) {
+			let minx = enemy.data.moveLimits[0];
+			let maxx = enemy.data.moveLimits[1];
+
+			if(enemy.body.position.x < minx)
+				enemy.data.moveDirection = +1;
+			else if(enemy.body.position.x > maxx) {
+				enemy.data.moveDirection = -1;
 			}
+
+			enemy.body.velocity.x = 2 * enemy.data.moveDirection;
+			
+			//if(enemy.body.position.x > )
+			//e.data.moveLimits = enemyMovements[i];
+			//	e.data.moveDirection = +1;
 		}
 	});
 
@@ -303,10 +324,10 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
-	if(texture != undefined){
+	if(texture != undefined) {
 		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,texture);
-	}
-	else{
+	} else {
+		// ce textura ni navedena, assajnaj nek default texture
 		gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,document.getElementById('texture_platform'));
 	}
 
@@ -323,6 +344,7 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 		gltexture: boxTexture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
+		visible: true,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
 			// Objektu damo body za uporabo v physics world-u.
 			// Telo dodaj v physics world
@@ -372,8 +394,8 @@ var initObjFiles = function() {
 				}
 				//tukej treba namest treh rgb vrednosti dat 2 uv koordinate
 				for(let j = 0; j < 2; j++) {
-					if(k<1){
-						vertices.push(mesh.textures[i+j]);
+					if(k < 1) {
+						vertices.push(mesh.textures[i + j]);
 					}
 					else{
 						vertices.push(0.5);
@@ -419,13 +441,15 @@ var initGame = function() {
 		position:[-4, 3, 15]
 	};
 
+	let keyPosition = [54, -4.5, 1];
+	let doorPosition = [76,-1.5,0];
+
 	initPhysics();
 	initObjFiles();
 
 	key = createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key",document.getElementById('texture_key'));
 	key.giveBody();
 
-	// sorry i Broke this door...
 	door = createObject(objectsVI.door, doorPosition, undefined, [2, 3, 0], "door",document.getElementById('texture_door'));
 	door.giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
 
@@ -434,20 +458,20 @@ var initGame = function() {
 	loadBananas();
 
 	initPlayer();
+
+	initEnemies();
+
 	console.log(environment);
 };
 
 function initPlayer() {
 	let startPosition = [0,0,0];
 
-
 	player = createObject(objectsVI.box, startPosition, undefined, [0.5, 1, 0.4], "player", document.getElementById('texture_player'));
-	player.hasKey = false;
-
 	player.giveBody(30, materials.frictionless, collisionGroups.OBJECT, collisionGroups.GROUND | collisionGroups.OBJECT);
 
-
 	player.data = {};
+	player.data.hasKey = false;
 	player.data.shootCooldown = 0;
 	player.data.lookDirectionX = +1;
 	player.data.speed = 4;
@@ -457,14 +481,18 @@ function initPlayer() {
 	player.actions = {
 		kill: function() {
 			player.body.position = new CANNON.Vec3(0, 0, 0);
-			//nazaj postavit stvari katere je player unicil prej
-			if(getObjectfromEnv("key") == undefined) {
-				createObject(objectsVI.key, keyPosition, undefined, [1, 1, 1], "key").giveBody();
-			}
+			player.data.hasKey = false;
 
-			if(getObjectfromEnv("door") == undefined) {
-				createObject(objectsVI.door, doorPosition, undefined, [1, 1, 1], "door").giveBody(0, materials.frictionless, collisionGroups.OTHER, collisionGroups.OBJECT | collisionGroups.BULLET);
-			}
+			//nazaj pokazat stvari katere je player pobral prej
+			key.visible = true;
+			door.visible = true;
+			bananas.forEach(function(banana) {
+				banana.visible = true;
+			});
+			player.data.score = 0;
+			enemies.forEach(function(enemy) {
+				enemy.actions.respawn(enemy);
+			});
 		},
 		shoot: function() {
 			let pos = player.body.position;
@@ -520,6 +548,65 @@ function initPlayer() {
 		if(contactNormal.dot(upAxis) > 0.5) // Use a "good" threshold value between 0 and 1 here!
 		player.data.canJump = true;
 	});
+}
+
+function initEnemies() {
+	let enemyPositions = [
+		[7, 0, 0], // rampa
+		[32, 2, -1.5], // stopnica 2
+		[26, -1, 0.9], // poleg stopnic
+		[40, -1, 2.1], // poleg stopnic
+		[57.5, -6.5, 2], // podtla
+		[73, -1, 0], // rampa konc
+	];
+	let enemyMovements = [
+		[4, 10],
+		[31, 33],
+		[26, 40],
+		[26, 40],
+		[54, 60],
+		[69, 73]
+	];
+
+	for(let i = 0; i < enemyPositions.length; i++) {
+		let e = createObject(objectsVI.box, enemyPositions[i], [0, 0, 0], [0.6, 0.7, 0.6], "enemy");
+		e.giveBody(1, materials.frictionless, collisionGroups.OBJECT, collisionGroups.OBJECT | collisionGroups.GROUND | collisionGroups.BULLET);
+
+		e.data = {};
+		e.data.moveDirection = -1;
+		e.data.moveLimits = enemyMovements[i];
+
+		e.actions = {
+			kill: function(e) {
+				e.visible = false;
+				e.body.collisionFilterMask = collisionGroups.GROUND;
+			},
+			respawn: function(e) {
+				e.visible = true;
+				e.body.collisionFilterMask = collisionGroups.OBJECT | collisionGroups.GROUND | collisionGroups.BULLET;
+			}
+		};
+		e.body.addEventListener("collide", function(event) {
+			let object, other;
+			if(event.body.parentObject.type == "enemy") {
+				object = event.body.parentObject;
+				other = event.target.parentObject;
+			} else {
+				object = event.target.parentObject;
+				other = event.body.parentObject;
+			}
+			if(object.visible) {
+				if(other.type == "bullet") {
+					object.actions.kill(object);
+					player.data.score += 50;
+				}
+				if(other.type == "player") {
+					player.actions.kill();
+				}
+			}
+		});
+		enemies.push(e);
+	}
 }
 
 function loadBananas() {
@@ -697,7 +784,7 @@ function handleKeyDown(event) {
 	if (player.data.canJump && event.code == "Space") { 
 		// do jump
 		player.data.canJump = false;
-		player.body.velocity.y = 6;
+		player.body.velocity.y = 6.5;
 	}
 }
 
