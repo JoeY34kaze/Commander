@@ -728,9 +728,23 @@ var draw = function(object) {
 	let matViewUniformLocation = gl.getUniformLocation(program, 'mView');
 	let matProjUniformLocation = gl.getUniformLocation(program, 'mProj');
 
+	let matNormalUniformLocation = gl.getUniformLocation(program, 'mNormal');
+
+	let vecAmbientColUniformLocation = gl.getUniformLocation(program, 'vAmbientColor');
+	let vecLightDirUniformLocation = gl.getUniformLocation(program, 'vLightingDirection');
+	let vecDirColUniformLocation = gl.getUniformLocation(program, 'vDirectionalColor');
+
+	let samplerUniformLocation = gl.getUniformLocation(program, 'sampler');
+
+
 	let worldMatrix = new Float32Array(16);
 	let viewMatrix = new Float32Array(16);
 	let projMatrix = new Float32Array(16);
+
+	let normalMatrix = new Float32Array(9);
+	let ambientCol = new Float32Array([0.25, 0.25, 0.25]);
+	let lightDir = new Float32Array([-0.2, -0.8, -1]);
+	let dirCol = new Float32Array([0.8, 0.8, 0.8]);
 
 	mat4.identity(worldMatrix);
 	let cam = player.body.position;
@@ -739,9 +753,12 @@ var draw = function(object) {
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
-	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
-	gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
-	gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
+	mat3.identity(normalMatrix);
+	mat3.normalFromMat4(normalMatrix, viewMatrix);
+
+	let adjLightDir = new Float32Array(3);
+	vec3.normalize(lightDir, adjLightDir);
+	vec3.scale(adjLightDir, -1);
 
 	// TRANSFORMACIJE
 	let transformMatrix = new Float32Array(16);
@@ -756,30 +773,36 @@ var draw = function(object) {
 
 	mat4.mul(worldMatrix, worldMatrix, transformMatrix);
 
+	//nastavi bufferje
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
+	//gl.bindBuffer(gl.ARRAY_BUFFER, object.normalBuffer);
+	//gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D,object.gltexture);
 
 	let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
+	let normalAttribLocation = gl.getAttribLocation(program, 'vertNormal');
 	let texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord');
 
-	// gl.vertexAttribPointer(
-	//   Attribute location,
-	//   Number of elements per attribute,
-	//   Type of elements,
-	//   ,
-	//   Size of an individual vertex,
-	//   Offset from the beginning of a single vertex to this attribute
-	// );
 	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 0);//5 namest 6 ker smo rgb zamenjal z uv koordinatam
+	gl.vertexAttribPointer(normalAttribLocation, 3, gl.FLOAT, gl.FALSE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
 	gl.vertexAttribPointer(texCoordAttribLocation, 2, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
 
 	gl.enableVertexAttribArray(positionAttribLocation);
+	gl.enableVertexAttribArray(normalAttribLocation);
 	gl.enableVertexAttribArray(texCoordAttribLocation);
 
-	gl.bindTexture(gl.TEXTURE_2D,object.gltexture);
-	//gl.activeTexture(gl.TEXTURE0);
 
+	//nastavi uniforme
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
+	gl.uniformMatrix4fv(matViewUniformLocation, gl.FALSE, viewMatrix);
+	gl.uniformMatrix4fv(matProjUniformLocation, gl.FALSE, projMatrix);
+	gl.uniformMatrix3fv(matNormalUniformLocation, gl.FALSE, normalMatrix);
+	gl.uniform3fv(vecAmbientColUniformLocation, ambientCol);
+	gl.uniform3fv(vecLightDirUniformLocation, adjLightDir);
+	gl.uniform3fv(vecDirColUniformLocation, dirCol);
+	gl.uniform1i(samplerUniformLocation, 0);
+
 	gl.drawElements(gl.TRIANGLES, object.indicesLen, gl.UNSIGNED_SHORT, 0);
 };
 
