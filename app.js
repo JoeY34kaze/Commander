@@ -93,8 +93,45 @@ var objectsVI = {
 			// Bottom
 			21, 20, 22,
 			22, 20, 23
+		],
+		normals: [
+			// Top face
+			0.0,  1.0,  0.0,
+			0.0,  1.0,  0.0,
+			0.0,  1.0,  0.0,
+			0.0,  1.0,  0.0,
+
+			// Left face
+			-1.0,  0.0,  0.0,
+			-1.0,  0.0,  0.0,
+			-1.0,  0.0,  0.0,
+			-1.0,  0.0,  0.0,
+
+			// Right face
+			1.0,  0.0,  0.0,
+			1.0,  0.0,  0.0,
+			1.0,  0.0,  0.0,
+			1.0,  0.0,  0.0,
+
+			// Front face
+			0.0,  0.0,  1.0,
+			0.0,  0.0,  1.0,
+			0.0,  0.0,  1.0,
+			0.0,  0.0,  1.0,
+
+			// Back face
+			0.0,  0.0, -1.0,
+			0.0,  0.0, -1.0,
+			0.0,  0.0, -1.0,
+			0.0,  0.0, -1.0,
+
+			// Bottom face
+			0.0, -1.0,  0.0,
+			0.0, -1.0,  0.0,
+			0.0, -1.0,  0.0,
+			0.0, -1.0,  0.0
 		]
-	},
+	}
 };
 
 
@@ -235,7 +272,7 @@ var gameplay = function() {//do stuff
 			}
 
 			enemy.body.velocity.x = 2 * enemy.data.moveDirection;
-			
+
 			//if(enemy.body.position.x > )
 			//e.data.moveLimits = enemyMovements[i];
 			//	e.data.moveDirection = +1;
@@ -305,8 +342,8 @@ function initPhysics() {
 	world.addContactMaterial(mat_frictionless);
 }
 
-// keira objekt s podanimi parametri (obvezno podati vertice in indice)
-function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "", texture) {
+// keira objekt s podanimi parametri (obvezno podati vertice, indice in normale)
+function createObject({vertices, indices, normals}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "", texture) {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -315,6 +352,10 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 	let boxIndexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+	let boxNormalBufferObject = gl.createBuffer();
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxNormalBufferObject);
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
 	//create texture ----------------------------
 	let boxTexture = gl.createTexture();
@@ -335,7 +376,7 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 
 	var object = {
 		program: shaderProgram,
-		indices: indices,
+		indicesLen: indices.length,
 		//position: position, // !! use body.position !!
 		rotation: rotation,
 		scale: scale,
@@ -344,6 +385,7 @@ function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 
 		gltexture: boxTexture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
+		normalBuffer: boxNormalBufferObject,
 		visible: true,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
 			// Objektu damo body za uporabo v physics world-u.
@@ -406,6 +448,7 @@ var initObjFiles = function() {
 			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
+			objectsVI[objName].normals = mesh.vertexNormals;
 		});
 		client.send();
 	}
@@ -737,7 +780,7 @@ var draw = function(object) {
 	//gl.activeTexture(gl.TEXTURE0);
 
 	gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
-	gl.drawElements(gl.TRIANGLES, object.indices.length, gl.UNSIGNED_SHORT, 0);
+	gl.drawElements(gl.TRIANGLES, object.indicesLen, gl.UNSIGNED_SHORT, 0);
 };
 
 var currentlyPressedKeys = {};
@@ -781,7 +824,7 @@ function handleKeys() {
 function handleKeyDown(event) {
 	// storing the pressed state for individual key
 	currentlyPressedKeys[event.code] = true;
-	if (player.data.canJump && event.code == "Space") { 
+	if (player.data.canJump && event.code == "Space") {
 		// do jump
 		player.data.canJump = false;
 		player.body.velocity.y = 6.5;
