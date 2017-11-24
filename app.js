@@ -719,9 +719,9 @@ var draw = function(object) {
 	mat3.invert(normalMatrix, normalMatrix);
 	mat3.transpose(normalMatrix, normalMatrix);
 
-	let adjLightDir = new Float32Array(3);
-	vec3.normalize(lightDir, adjLightDir);
-	vec3.scale(adjLightDir, -1);
+	let adjLightDir = vec3.create();
+	vec3.normalize(adjLightDir, lightDir);
+	vec3.scale(adjLightDir, adjLightDir, -1);
 
 	// TRANSFORMACIJE
 	let transformMatrix = new Float32Array(16);
@@ -739,7 +739,7 @@ var draw = function(object) {
 	//nastavi bufferje
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
-	//gl.activeTexture(gl.TEXTURE0);
+	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D,object.gltexture);
 
 	let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
