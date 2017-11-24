@@ -386,7 +386,7 @@ var initObjFiles = function() {
 		client.open('GET', objForIm, false);
 		client.addEventListener("load", function() {
 			let mesh = new OBJ.Mesh(client.responseText);
-			[mesh.vertices, mesh.vertexNormals] = fixVertices(mesh.vertices, mesh.vertexNormals);
+			mesh.vertices = fixVertices(mesh.vertices);
 			let vertices = [];
 			for(let i = 0; i < mesh.vertices.length; i += 3) {
 				for(let j = 0; j < 3; j++) {
@@ -416,7 +416,7 @@ var initObjFiles = function() {
 
 	// createObject(...) funkcija pricakuje vertice na obmocju (-1, 1). Ta funckija podane vertice
 	// popravi (t.j. resizea objekt, da pase v obmocje (-1, 1) )
-	function fixVertices(vertices, vertexNormals) {
+	function fixVertices(vertices) {
 		// poiscemo najmanjso vertico in najvecjo vertico
 		let min = vertices[0];
 		let max = vertices[0];
@@ -432,9 +432,8 @@ var initObjFiles = function() {
 		// Te nove vertice lahko zdaj vrnemo.
 		for(let i = 0; i < vertices.length; i++) {
 			vertices[i] /= max;
-			vertexNormals[i] /= max;
 		}
-		return [vertices, vertexNormals];
+		return vertices;
 	}
 };
 
@@ -704,7 +703,7 @@ var draw = function(object) {
 
 	let normalMatrix = new Float32Array(9);
 	let ambientCol = new Float32Array([0.25, 0.25, 0.25]);
-	let lightDir = new Float32Array([-0.2, -0.8, -1]);
+	let lightDir = new Float32Array([-0.25, -0.25, -1.0]);
 	let dirCol = new Float32Array([0.8, 0.8, 0.8]);
 
 	mat4.identity(worldMatrix);
@@ -714,8 +713,11 @@ var draw = function(object) {
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
+	//mat3.normalFromMat4(normalMatrix, viewMatrix); //naj bi delala isto kot vse te ostale skupaj
 	mat3.identity(normalMatrix);
-	mat3.normalFromMat4(normalMatrix, viewMatrix);
+	mat3.fromMat4(normalMatrix, viewMatrix);
+	mat3.invert(normalMatrix, normalMatrix);
+	mat3.transpose(normalMatrix, normalMatrix);
 
 	let adjLightDir = new Float32Array(3);
 	vec3.normalize(lightDir, adjLightDir);
