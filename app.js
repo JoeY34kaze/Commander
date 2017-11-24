@@ -34,40 +34,40 @@ var objectsVI = {
 		// X, Y, Z           U,V
 		vertices: [
 			// Top
-			-1.0, 1.0, -1.0,   0,0,
-			-1.0, 1.0, 1.0,    0,1,
-			1.0, 1.0, 1.0,     1,1,
-			1.0, 1.0, -1.0,    1,0,
+			-1.0, 1.0, -1.0,   0,0,		0.0,  1.0,  0.0,
+			-1.0, 1.0, 1.0,    0,1,		0.0,  1.0,  0.0,
+			1.0, 1.0, 1.0,     1,1,		0.0,  1.0,  0.0,
+			1.0, 1.0, -1.0,    1,0,		0.0,  1.0,  0.0,
 
 			// Left
-			-1.0, 1.0, 1.0,    0,0,
-			-1.0, -1.0, 1.0,   1,0,
-			-1.0, -1.0, -1.0,  1,1,
-			-1.0, 1.0, -1.0,   0,1,
+			-1.0, 1.0, 1.0,    0,0,		-1.0,  0.0,  0.0,
+			-1.0, -1.0, 1.0,   1,0,		-1.0,  0.0,  0.0,
+			-1.0, -1.0, -1.0,  1,1,		-1.0,  0.0,  0.0,
+			-1.0, 1.0, -1.0,   0,1,		-1.0,  0.0,  0.0,
 
 			// Right
-			1.0, 1.0, 1.0,    1,1,
-			1.0, -1.0, 1.0,   0,1,
-			1.0, -1.0, -1.0,  0,0,
-			1.0, 1.0, -1.0,   1,0,
+			1.0, 1.0, 1.0,    1,1,		1.0,  0.0,  0.0,
+			1.0, -1.0, 1.0,   0,1,		1.0,  0.0,  0.0,
+			1.0, -1.0, -1.0,  0,0,		1.0,  0.0,  0.0,
+			1.0, 1.0, -1.0,   1,0,		1.0,  0.0,  0.0,
 
 			// Front
-			1.0, 1.0, 1.0,      1,1,
-			1.0, -1.0, 1.0,     1,0,
-			-1.0, -1.0, 1.0,    0,0,
-			-1.0, 1.0, 1.0,     0,1,
+			1.0, 1.0, 1.0,      1,1,		0.0,  0.0,  1.0,
+			1.0, -1.0, 1.0,     1,0,		0.0,  0.0,  1.0,
+			-1.0, -1.0, 1.0,    0,0,		0.0,  0.0,  1.0,
+			-1.0, 1.0, 1.0,     0,1,		0.0,  0.0,  1.0,
 
 			// Back
-			1.0, 1.0, -1.0,      0,0,
-			1.0, -1.0, -1.0,     0,1,
-			-1.0, -1.0, -1.0,    1,1,
-			-1.0, 1.0, -1.0,     1,0,
+			1.0, 1.0, -1.0,      0,0,		0.0,  0.0, -1.0,
+			1.0, -1.0, -1.0,     0,1,		0.0,  0.0, -1.0,
+			-1.0, -1.0, -1.0,    1,1,		0.0,  0.0, -1.0,
+			-1.0, 1.0, -1.0,     1,0,		0.0,  0.0, -1.0,
 
 			// Bottom
-			-1.0, -1.0, -1.0,   1,1,
-			-1.0, -1.0, 1.0,    1,0,
-			1.0, -1.0, 1.0,     0,0,
-			1.0, -1.0, -1.0,    0,1,
+			-1.0, -1.0, -1.0,   1,1,		0.0, -1.0,  0.0,
+			-1.0, -1.0, 1.0,    1,0,		0.0, -1.0,  0.0,
+			1.0, -1.0, 1.0,     0,0,		0.0, -1.0,  0.0,
+			1.0, -1.0, -1.0,    0,1,		0.0, -1.0,  0.0
 		],
 		indices: [
 			// Top
@@ -93,43 +93,6 @@ var objectsVI = {
 			// Bottom
 			21, 20, 22,
 			22, 20, 23
-		],
-		normals: [
-			// Top face
-			0.0,  1.0,  0.0,
-			0.0,  1.0,  0.0,
-			0.0,  1.0,  0.0,
-			0.0,  1.0,  0.0,
-
-			// Left face
-			-1.0,  0.0,  0.0,
-			-1.0,  0.0,  0.0,
-			-1.0,  0.0,  0.0,
-			-1.0,  0.0,  0.0,
-
-			// Right face
-			1.0,  0.0,  0.0,
-			1.0,  0.0,  0.0,
-			1.0,  0.0,  0.0,
-			1.0,  0.0,  0.0,
-
-			// Front face
-			0.0,  0.0,  1.0,
-			0.0,  0.0,  1.0,
-			0.0,  0.0,  1.0,
-			0.0,  0.0,  1.0,
-
-			// Back face
-			0.0,  0.0, -1.0,
-			0.0,  0.0, -1.0,
-			0.0,  0.0, -1.0,
-			0.0,  0.0, -1.0,
-
-			// Bottom face
-			0.0, -1.0,  0.0,
-			0.0, -1.0,  0.0,
-			0.0, -1.0,  0.0,
-			0.0, -1.0,  0.0
 		]
 	}
 };
@@ -342,8 +305,8 @@ function initPhysics() {
 	world.addContactMaterial(mat_frictionless);
 }
 
-// keira objekt s podanimi parametri (obvezno podati vertice, indice in normale)
-function createObject({vertices, indices, normals}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "", texture) {
+// keira objekt s podanimi parametri (obvezno podati vertice in indice)
+function createObject({vertices, indices}, position = [0, 0, 0], rotation = [0, 0, 0], scale = [1, 1, 1], type = "", texture) {
 	// Create buffers for object
 	let boxVertexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, boxVertexBufferObject);
@@ -352,10 +315,6 @@ function createObject({vertices, indices, normals}, position = [0, 0, 0], rotati
 	let boxIndexBufferObject = gl.createBuffer();
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxIndexBufferObject);
 	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-
-	let boxNormalBufferObject = gl.createBuffer();
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, boxNormalBufferObject);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
 
 	//create texture ----------------------------
 	let boxTexture = gl.createTexture();
@@ -385,7 +344,6 @@ function createObject({vertices, indices, normals}, position = [0, 0, 0], rotati
 		gltexture: boxTexture,
 		vertexBuffer: boxVertexBufferObject,
 		indexBuffer: boxIndexBufferObject,
-		normalBuffer: boxNormalBufferObject,
 		visible: true,
 		giveBody: function(mass = 0, material = undefined, colGroups, colGroupsMask) {
 			// Objektu damo body za uporabo v physics world-u.
@@ -428,7 +386,7 @@ var initObjFiles = function() {
 		client.open('GET', objForIm, false);
 		client.addEventListener("load", function() {
 			let mesh = new OBJ.Mesh(client.responseText);
-			mesh.vertices = fixVertices(mesh.vertices);
+			[mesh.vertices, mesh.vertexNormals] = fixVertices(mesh.vertices, mesh.vertexNormals);
 			let vertices = [];
 			for(let i = 0; i < mesh.vertices.length; i += 3) {
 				for(let j = 0; j < 3; j++) {
@@ -443,19 +401,22 @@ var initObjFiles = function() {
 						vertices.push(0.5);
 					}
 				}
+
+				for(let j = 0; j < 3; j++){
+					vertices.push(mesh.vertexNormals[i+j]);
+				}
 			}
 
 			objectsVI[objName] = {};
 			objectsVI[objName].vertices = vertices;
 			objectsVI[objName].indices = mesh.indices;
-			objectsVI[objName].normals = mesh.vertexNormals;
 		});
 		client.send();
 	}
 
 	// createObject(...) funkcija pricakuje vertice na obmocju (-1, 1). Ta funckija podane vertice
 	// popravi (t.j. resizea objekt, da pase v obmocje (-1, 1) )
-	function fixVertices(vertices) {
+	function fixVertices(vertices, vertexNormals) {
 		// poiscemo najmanjso vertico in najvecjo vertico
 		let min = vertices[0];
 		let max = vertices[0];
@@ -467,13 +428,13 @@ var initObjFiles = function() {
 		//pogledamo katera absolutna vrednost je vecja
 		min *= -1;
 		if(min > max) max = min;
-
 		// vse vertice delimo z max, da zmanjsamo predmet na (-1, 1) - to kar smo hoteli.
 		// Te nove vertice lahko zdaj vrnemo.
 		for(let i = 0; i < vertices.length; i++) {
 			vertices[i] /= max;
+			vertexNormals[i] /= max;
 		}
-		return vertices;
+		return [vertices, vertexNormals];
 	}
 };
 
@@ -776,7 +737,6 @@ var draw = function(object) {
 	//nastavi bufferje
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.indexBuffer);
-	//gl.bindBuffer(gl.ARRAY_BUFFER, object.normalBuffer);
 	//gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D,object.gltexture);
 
@@ -784,9 +744,9 @@ var draw = function(object) {
 	let normalAttribLocation = gl.getAttribLocation(program, 'vertNormal');
 	let texCoordAttribLocation = gl.getAttribLocation(program, 'vertTexCoord');
 
-	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 0);//5 namest 6 ker smo rgb zamenjal z uv koordinatam
-	gl.vertexAttribPointer(normalAttribLocation, 3, gl.FLOAT, gl.FALSE, 3 * Float32Array.BYTES_PER_ELEMENT, 0);
-	gl.vertexAttribPointer(texCoordAttribLocation, 2, gl.FLOAT, gl.FALSE, 5 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
+	gl.vertexAttribPointer(positionAttribLocation, 3, gl.FLOAT, gl.FALSE, 8 * Float32Array.BYTES_PER_ELEMENT, 0);//5 namest 6 ker smo rgb zamenjal z uv koordinatam
+	gl.vertexAttribPointer(normalAttribLocation, 3, gl.FLOAT, gl.FALSE, 8 * Float32Array.BYTES_PER_ELEMENT, 5 * Float32Array.BYTES_PER_ELEMENT);
+	gl.vertexAttribPointer(texCoordAttribLocation, 2, gl.FLOAT, gl.FALSE, 8 * Float32Array.BYTES_PER_ELEMENT, 3 * Float32Array.BYTES_PER_ELEMENT);
 
 	gl.enableVertexAttribArray(positionAttribLocation);
 	gl.enableVertexAttribArray(normalAttribLocation);
