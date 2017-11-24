@@ -703,8 +703,8 @@ var draw = function(object) {
 
 	let normalMatrix = new Float32Array(9);
 	let ambientCol = new Float32Array([0.25, 0.25, 0.25]);
-	let lightDir = new Float32Array([-0.25, -0.25, -1.0]);
-	let dirCol = new Float32Array([0.8, 0.8, 0.8]);
+	let lightDir = new Float32Array([-0.4, -0.6, -0.7]);
+	let dirCol = new Float32Array([0.7, 0.7, 0.7]);
 
 	mat4.identity(worldMatrix);
 	let cam = player.body.position;
@@ -713,15 +713,7 @@ var draw = function(object) {
 	mat4.perspective(projMatrix, glMatrix.toRadian(45), canvas.width / canvas.height, 0.1, 1000.0);
 	//mat4.identity(projMatrix);
 
-	//mat3.normalFromMat4(normalMatrix, viewMatrix); //naj bi delala isto kot vse te ostale skupaj
-	mat3.identity(normalMatrix);
-	mat3.fromMat4(normalMatrix, viewMatrix);
-	mat3.invert(normalMatrix, normalMatrix);
-	mat3.transpose(normalMatrix, normalMatrix);
 
-	let adjLightDir = vec3.create();
-	vec3.normalize(adjLightDir, lightDir);
-	vec3.scale(adjLightDir, adjLightDir, -1);
 
 	// TRANSFORMACIJE
 	let transformMatrix = new Float32Array(16);
@@ -735,6 +727,16 @@ var draw = function(object) {
 	mat4.rotateZ(transformMatrix, transformMatrix, glMatrix.toRadian(object.rotation[2]));
 
 	mat4.mul(worldMatrix, worldMatrix, transformMatrix);
+
+	mat3.normalFromMat4(normalMatrix, worldMatrix); //naj bi delala isto kot vse te ostale skupaj
+	/*mat3.identity(normalMatrix);
+	mat3.fromMat4(normalMatrix, worldMatrix);
+	mat3.invert(normalMatrix, normalMatrix);
+	mat3.transpose(normalMatrix, normalMatrix);*/
+
+	let adjLightDir = vec3.create();
+	vec3.normalize(adjLightDir, lightDir);
+	vec3.scale(adjLightDir, adjLightDir, -1);
 
 	//nastavi bufferje
 	gl.bindBuffer(gl.ARRAY_BUFFER, object.vertexBuffer);
