@@ -563,7 +563,7 @@ function loadPlatforms() {
 		createPlatform("zadnja stena", [-4, 0, 0], [0, 0, 0], [0.2, 4, 2]),
 		createPlatform("prva rampa", [7, -2, 0], [0, 0, 0], [5, 1, 1]),
 		createPlatform("tla za rampo", [13, -3, 0], [0, 0, 0], [3, 1, 3]),
-		createPlatform("tla za rampo, ozka", [16, -3, 0], [0, 0, 0], [4, 1, 1.5]),
+		createPlatform("tla za rampo, ozka", [18, -3, 0], [0, 0, 0], [2, 1, 1.5]),
 		createPlatform("tla, skupna s stopnicami", [30, -3, 0], [0, 0, 0], [8, 1, 3]),
 		createPlatform("stopnice: 1", [28, -2, -1.5], [0, 0, 0], [2, 1.5, 1.5]),
 		createPlatform("stopnice: 2", [32, -1, -1.5], [0, 0, 0], [2, 2, 1.5]),
@@ -573,8 +573,8 @@ function loadPlatforms() {
 		createPlatform("naprej od stopnic", [48, -3, 0], [0, 0, 0], [4, 1, 3]),
 		createPlatform("tla poleg podtal", [58.25, -5, -2], [0, 0, 0], [6.25, 3, 1]),
 		createPlatform("tla nad podtlemi", [55, -2.5, 1], [0, 0, 0], [3, 0.5, 2]),
-		createPlatform("podtla tla", [57, -8, 1], [0, 0, 0], [5, 0.5, 2]),
-		createPlatform("podtla stena na levi", [51, -6, 0], [0, 0, 0], [1, 2.5, 3]),
+		createPlatform("podtla tla", [56.75, -8, 1], [0, 0, 0], [4.75, 0.5, 2]),
+		createPlatform("podtla stena na levi", [51, -6.25, 0], [0, 0, 0], [1, 2.25, 3]),
 		createPlatform("podtla desno stopnice: 1", [62, -7.25, 1], [0, 0, 0], [0.5, 1.25, 2]),
 		createPlatform("podtla desno stopnice: 2", [63, -6.5, 1], [0, 0, 0], [0.5, 2, 2]),
 		createPlatform("podtla desno stopnice: 3", [64, -5.75, 1], [0, 0, 0], [0.5, 2.75, 2]),
@@ -583,7 +583,7 @@ function loadPlatforms() {
 	];
 
 	for(let i = 0; i < platforms.length; i++) {
-		createObject(objectsVI.box, platforms[i].position, platforms[i].rotation, platforms[i].scale)
+		createObject(objectsVI.box, platforms[i].position, platforms[i].rotation, platforms[i].scale, "platform", document.getElementById("texture_grass"))
 			.giveBody(0, materials.frictionless, collisionGroups.GROUND, collisionGroups.OBJECT | collisionGroups.BULLET);
 	}
 }
