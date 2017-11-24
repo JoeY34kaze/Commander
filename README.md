@@ -1,21 +1,20 @@
-# Commander-dev
+# Keen3D-WebGL
 
-## Osnovno
+## Kako igrati
+- smerne tipke: premikanje
+- space: skok
+- X: streljaj
 
-Posamezen objekt instanciraš v funkciji `initGame()`: kličeš funckijo `createObject(...)`, ki ji podaš array vertices in array indices (poljubno še translacijski, rotacijski in skalirni vektor).
-Funkcija kreira shader program in bufferje za objekt in objekt doda v array `environment`.
+## O igri
 
-Po vseh inicializacijah se prične game loop (`update()` funkcija), ki je v glavnem sestavljena iz:
-- `gameplay()` funckije, ki naj bi implementirala vso igralno logiko (premiki objektov, preverjanje kolizij, ipd.),
-- zanke z `draw(object)`, ki v WebGL canvas izriše vse objekte v spremenljivki `environment`
-## TODO
+Keen3D je 3D platformer igra narejena v WebGL. Igra ima narejen nek osnoven level, ki vsebuje nekaj banan in enemyev. Igralec lahko pobira banane za dodatne točke. 
 
-Implementacije:
-- rotacije v funckiji `createObject()`
-- svetloba (in mogoče še teksture) v shaderjih
-- kolizije med objekti in primerne reakcije (npr. med igralcem in tlemi; za začetek je igralec lahko tudi navaden kvader...)
-- kontrola objekta (igralca) prek tipk na tipkovnici (premik levo-desno, skok)
+Če se igralec dotakne enemya ali pade v luknjo (dol z platform) se igra resetira (ponovi level). Igralec lahko enemye odstrani tako, da jih ustreli.
 
------
+## Nekaj več
 
-**Če za kako stvar nisi siguren kako in kaj je najboljš, da vprašaš v chatu.**
+Collision detection je implementiran s pomočjo knjižnice Cannon.js. Za pobiranje banan in ključa pa se računa razdalja med igralcem in objektom.
+
+Za vsak izstreljen metek se ustvari nov objekt; Pobiranje banan in ključa pa je implementirano tako, da imajo objekti lastnost _visible_, ki se nastavi na false, ko je objekt pobran oz. uničen (ob resetu levela, t.j. ko player umre, se parameter nastavi nazaj na true).
+
+Igra ima implementirano uporabo tekstur in osvetljevanja (ambient light in directional light). Teksture so nekaj osnovnega: platforme imajo neko zeleno, igralec ima svojo, ključ in banane svojo. Ambient light se nekoliko spremeni, če je igralec blizu ključa.
